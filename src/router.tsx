@@ -19,6 +19,10 @@ const AdminLayout = lazy(() => import('@/layouts/AdminLayout'))
 const AdminOverviewPage = lazy(() => import('@/pages/admin/OverviewPage'))
 const AdminExamsListPage = lazy(() => import('@/pages/admin/ExamsListPage'))
 const AdminExamEditorPage = lazy(() => import('@/pages/admin/ExamEditorPage'))
+const AdminExamManagePage = lazy(() => import('@/pages/admin/ExamManagePage'))
+const AdminStudentsPage = lazy(() => import('@/pages/admin/StudentsPage'))
+const AdminStudentDetailPage = lazy(() => import('@/pages/admin/StudentDetailPage'))
+const AdminRequestsPage = lazy(() => import('@/pages/admin/RequestsPage'))
 
 const s = (node: ReactNode) => <Suspense fallback={<Loading fullScreen />}>{node}</Suspense>
 
@@ -53,6 +57,10 @@ export const router = createBrowserRouter([
               { path: 'exams', element: s(<AdminExamsListPage />) },
               { path: 'exams/new', element: s(<AdminExamEditorPage />) },
               { path: 'exams/:id', element: s(<AdminExamEditorPage />) },
+              { path: 'exams/:id/manage', element: s(<AdminExamManagePage />) },
+              { path: 'students', element: s(<AdminStudentsPage />) },
+              { path: 'students/:id', element: s(<AdminStudentDetailPage />) },
+              { path: 'requests', element: s(<AdminRequestsPage />) },
             ],
           },
         ],

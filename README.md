@@ -26,7 +26,9 @@ npm run dev                        # http://localhost:5173
 | `npm run db:push` | `supabase db push --remote`: apply pending migrations to the linked project |
 | `npm run db:status` | Compare local migration files with the linked project's history |
 | `npm run db:types` | Regenerate TypeScript types from the linked project |
-| `npm run db:test` | Run the pgTAP tests in `supabase/tests/` against the linked project (all inside a rolled-back transaction) |
+| `npm run db:test:remote` | Run the pgTAP tests in `supabase/tests/` on the linked project **without Docker**. Each file runs in one transaction that always aborts, so nothing is committed. Prints failed assertions by name. Dev project only. |
+| `npm run db:test` | `supabase test db --remote` (same tests, but the CLI needs Docker for this) |
+| `npm run fn:deploy` | Deploy the Edge Functions in `supabase/functions/` (bundled server-side, no Docker) |
 | `npm run typecheck` | `tsc -b` (strict) |
 
 Rules:
@@ -56,6 +58,22 @@ ids. This needs **Realtime → Settings → "Allow public access"** to stay enab
 default). If Realtime is unavailable, the page falls back to refreshing every minute and
 shows "Updates every minute" instead of "Live".
 
+`realtime.send` stores broadcasts in `realtime.messages`, which the Realtime service
+partitions by day. On a project where no client has connected to Realtime yet, those
+partitions don't exist, and the send fails silently (the trigger never blocks a submit).
+The `04_results_leaderboard` test "submitting broadcasts…" fails until then. Open any
+leaderboard page once, then re-run the tests.
+
+### Edge Functions
+
+`admin-ban` bans or unbans a student. It calls `admin_set_ban()` with the **admin's own
+token** (Postgres checks `is_admin()`, sets `is_banned`, closes any exam in progress and
+writes the audit log), then bans the auth user with the service role key (blocks sign-in
+and token refresh). The service role key exists only inside the function. Hosted projects
+inject `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` automatically,
+so there are no secrets to set. `verify_jwt` is off in `supabase/config.toml` because the
+function verifies the caller itself (`auth.getUser`). Deploy with `npm run fn:deploy`.
+
 ### Test users (dev project)
 
 Telegram can't redirect to `localhost`, so `npm run dev` shows an email/password form when
@@ -70,8 +88,8 @@ Telegram can't redirect to `localhost`, so `npm run dev` shows an email/password
    ```
 3. Sign in as the student. You'll be sent to profile completion first.
 
-To test a ban before Phase 5 adds the UI:
-`update public.profiles set is_banned = true where id = (select id from auth.users where email = 'student@test.com');`
+Ban / unban test users from **Admin → Students → (student) → Ban**. That goes through the
+`admin-ban` Edge Function, so the auth user is banned too.
 
 ### Dev vs production
 

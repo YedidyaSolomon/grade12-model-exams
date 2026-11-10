@@ -12,6 +12,8 @@
     "db:push": "supabase db push --remote",
     "db:status": "supabase migration list --remote",
     "db:test": "supabase test db --remote",
+    "db:test:remote": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-test-remote.ps1",
+    "fn:deploy": "supabase functions deploy --use-api",
     "db:types": "supabase gen types --lang typescript --schema public --remote > src/lib/database.types.ts"
   },
   "dependencies": {
@@ -27,7 +29,8 @@
     "react-dom": "^19.3.1",
     "react-i18next": "^18.0.0",
     "react-router": "^8.5.1",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.5",

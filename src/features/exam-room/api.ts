@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { isRpcError } from '@/lib/errors'
 import {
@@ -16,6 +16,18 @@ export const payloadKey = (examId: string) => `exam-payload:${examId}`
 export const roomKeys = {
   dashboard: ['student', 'dashboard'] as const,
   attempt: (examId: string) => ['student', 'attempt', examId] as const,
+}
+
+/** Ask for a re-exam of a closed exam the student missed (eligibility is checked in Postgres). */
+export function useRequestReexam() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (v: { examId: string; reason: string }) => {
+      const { error } = await supabase.rpc('request_reexam', { p_exam_id: v.examId, p_reason: v.reason })
+      if (error) throw error
+    },
+    onSettled: () => void qc.invalidateQueries({ queryKey: roomKeys.dashboard }),
+  })
 }
 
 /** 'already_taken' etc. for errors raised by the exam RPCs; null for anything else. */

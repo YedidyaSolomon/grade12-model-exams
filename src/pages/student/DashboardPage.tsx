@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, Navigate } from 'react-router'
+import { Link } from 'react-router'
 import { CalendarClock, CheckCircle2, Clock, Lock, Radio, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +11,8 @@ import { formatCountdown, formatEAT } from '@/lib/time'
 import { useStudentDashboard } from '@/features/exam-room/api'
 import { useServerNow } from '@/features/exam-room/useServerClock'
 import { ExamStateMessage, availability, type ExamAvailability } from '@/features/exam-room/components/ExamStateMessage'
+import { ReexamRequest } from '@/features/exam-room/components/ReexamRequest'
+import { GoSuspended } from '@/auth/GoSuspended'
 import type { DashboardExam } from '@/features/exam-room/types'
 
 export default function DashboardPage() {
@@ -27,7 +29,7 @@ export default function DashboardPage() {
       ) : dash.isError ? (
         <ErrorState message={errorMessage(dash.error)} onRetry={() => void dash.refetch()} />
       ) : dash.data.banned ? (
-        <Navigate to="/suspended" replace />
+        <GoSuspended />
       ) : (
         <Sections exams={dash.data.exams} offset={dash.data.offset} isAdmin={profile.data?.role === 'admin'} />
       )}
@@ -84,7 +86,14 @@ function Sections({ exams, offset, isAdmin }: { exams: DashboardExam[]; offset: 
         ) : (
           completed.map(({ e, av }) => (
             <ExamCard key={e.id} exam={e}>
-              {e.attempt?.submitted_at ? <ScoreLine exam={e} /> : <ExamStateMessage exam={e} av={av} nowMs={now} />}
+              {e.attempt?.submitted_at ? (
+                <ScoreLine exam={e} />
+              ) : (
+                <>
+                  <ExamStateMessage exam={e} av={av} nowMs={now} />
+                  {av.kind === 'closed' && <ReexamRequest exam={e} />}
+                </>
+              )}
             </ExamCard>
           ))
         )}
@@ -126,11 +135,15 @@ function LiveCard({ exam, av, now }: { exam: DashboardExam; av: ExamAvailability
 }
 
 function ExamCard({ exam, children }: { exam: DashboardExam; children: ReactNode }) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-2 rounded-xl border bg-card p-4">
       <div>
         <p className="text-xs text-muted-foreground">{exam.subject}</p>
-        <h3 className="font-semibold">{exam.title}</h3>
+        <h3 className="font-semibold">
+          {exam.title}
+          {exam.is_reexam && <Badge variant="secondary" className="ml-2 align-middle">{t('reexam.badge')}</Badge>}
+        </h3>
       </div>
       {children}
     </div>

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { BarChart3, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -134,10 +135,13 @@ export default function ExamsListPage() {
               {rows.map((e) => (
                 <tr key={e.id} className="border-b last:border-0 hover:bg-muted/30">
                   <td className="px-4 py-3">
-                    <Link to={`/admin/exams/${e.id}`} className="font-medium hover:underline">
+                    <Link to={`/admin/exams/${e.id}/manage`} className="font-medium hover:underline">
                       {e.title}
                     </Link>
-                    <p className="text-xs text-muted-foreground">{e.subject}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {e.subject}
+                      {e.reexam_of && <Badge variant="secondary" className="ml-1.5">{t('reexam.badge')}</Badge>}
+                    </p>
                   </td>
                   <td className="px-4 py-3">{t(`exams.stream.${e.stream}`)}</td>
                   <td className="px-4 py-3 text-xs">
@@ -158,6 +162,11 @@ export default function ExamsListPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-1">
+                      <Button asChild size="sm" variant="ghost">
+                        <Link to={`/admin/exams/${e.id}/manage`}>
+                          <BarChart3 aria-hidden /> {t('exams.actions.manage')}
+                        </Link>
+                      </Button>
                       <Button asChild size="sm" variant="ghost">
                         <Link to={`/admin/exams/${e.id}`}>
                           <Pencil aria-hidden /> {e.attempt_count > 0 ? t('exams.actions.view') : t('exams.actions.edit')}

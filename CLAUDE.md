@@ -26,20 +26,28 @@ Development runs against the cloud dev project (no Docker). See README.md for se
    - Realtime messages carry ids only, never scores.
    - Add a pgTAP assertion to `supabase/tests/05_results_hidden.test.sql` for any new path.
    - **Once released, results are never hidden again.** After release, an exam's windows
-     can't be added, extended or reopened (enforce in the DB, not only the UI). Extending
-     or reopening a window BEFORE release is allowed (it simply moves the release time).
-   - **Re-exams after release (Phase 5): "Create re-exam"** makes a NEW exam that copies
-     the original's questions and answer keys, with the question order shuffled and each
-     question's option order shuffled (answer keys remapped to the new letters). It is
-     restricted to the approved students (restricted window + `window_allowed_users`),
-     starts as a draft that the admin can edit before publishing, and has its own separate
-     results and leaderboard. It never changes the original exam or its leaderboard.
+     can't be added, extended or reopened, and no retake can be granted. Enforced by
+     `private.require_unreleased()` in the RPCs, plus the `exam_windows_guard_release`
+     trigger as a backstop (it blocks any window insert/update on a published exam whose
+     windows have all ended and that has submitted attempts). Extending a window or adding
+     one (optionally restricted via `window_allowed_users`) BEFORE release is allowed; it
+     simply moves the release time.
+   - **Re-exams after release: "Create re-exam"** (`admin_create_reexam`, or approving a
+     request) makes a NEW exam (`exams.reexam_of` = the ORIGINAL exam, never another
+     re-exam). It copies the questions in shuffled order, with each question's options
+     shuffled and its answer key remapped. It starts as an editable draft and has its own
+     results and leaderboard. Only students in `reexam_students` can see or start it
+     (exams RLS, `private.can_access_exam`, `student_dashboard`, and the
+     `attempts_reexam_guard` trigger). It never changes the original exam.
 4. **Server clock only.** Use `now()` / `clock_timestamp()` for every time check. Store UTC,
    display East Africa Time (`Africa/Addis_Ababa`, UTC+3). Admin datetime inputs are EAT.
    In React, any time-based decision or countdown uses `useServerClock` / `useServerNow`
    (`src/features/exam-room/useServerClock.ts`), never `Date.now()` directly. Device clocks
    can be hours off; one dev machine was 11 h fast, which silently blocked publishing.
 5. **Service role key only inside Edge Functions.** Never in frontend code or `VITE_*` vars.
+   An Edge Function that changes app data calls the database RPC with the CALLER's token
+   first (so Postgres checks `is_admin()` and writes the audit log), and only then uses the
+   service role for auth-level work. See `supabase/functions/admin-ban`.
 6. **Mobile-first, slow data.** Lazy-load non-student routes, keep payloads small, no heavy
    animations or images.
 
@@ -56,10 +64,25 @@ Development runs against the cloud dev project (no Docker). See README.md for se
 - Student-facing errors: `raise exception '<code>' using errcode = 'P0001'`, where `<code>`
   is listed in `STUDENT_ERROR_CODES` (`src/features/exam-room/types.ts`) and translated
   under `errors.<code>` in the locale files.
-- `attempts.deadline_at` / `started_at` are set by trigger and immutable afterwards.
+- `attempts.deadline_at` / `started_at` are set by trigger and immutable afterwards. The one
+  exception is `admin_extend_window`, which may only move an open attempt's deadline later
+  (guarded by the `app.window_extension` transaction setting in `attempts_guard_update`).
+- **Admin actions are audited.** Every admin RPC that changes students, windows, retakes or
+  re-exams calls `private.audit(action, user_id, exam_id, details)`. `admin_audit_log` is
+  append-only (admins can SELECT; nobody gets INSERT/UPDATE/DELETE). Add new action names
+  to `audit.actions` in the locale file.
+- Admin RPC errors are plain readable messages (`private.admin_error`, errcode 55000 /
+  22023 / P0002 / 42501). The UI shows `error.message` as-is.
+- Bans: `admin_set_ban` closes the student's open attempts, and `require_active_student` /
+  `submit_exam` reject a banned user (`banned`). Never ban with a direct UPDATE; use the
+  `admin-ban` Edge Function so the auth user is banned too.
+- Banned in the UI: go to `/suspended` through `useGoSuspended` / `<GoSuspended />`, which
+  refresh the cached profile first (a plain `<Navigate>` loops with the route guard).
 - After pushing: `npm run db:types` and commit `src/lib/database.types.ts`.
 - Tests: pgTAP in `supabase/tests/`, one file per area, each in a rolled-back transaction.
-  Test fixtures must not depend on or count seed data.
+  Test fixtures must not depend on or count seed data. Run them on the dev project with
+  `npm run db:test:remote` (no Docker needed). Write assertions as top-level
+  `select ok(...)` / `select is(...)` etc. so that script can report them by name.
 
 ## Frontend conventions
 
@@ -71,4 +94,4 @@ Development runs against the cloud dev project (no Docker). See README.md for se
 ## Commands
 
 `npm run dev` · `npm run typecheck` · `npm run build` · `npm run db:push` ·
-`npm run db:types` · `npm run db:test` · `npm run db:status`
+`npm run db:types` · `npm run db:test:remote` · `npm run db:status` · `npm run fn:deploy`

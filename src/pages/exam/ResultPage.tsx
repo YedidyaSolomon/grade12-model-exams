@@ -10,6 +10,7 @@ import { errorMessage } from '@/lib/errors'
 import { formatCountdown, formatDuration, formatEAT } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import { studentErrorCode } from '@/features/exam-room/api'
+import { GoSuspended } from '@/auth/GoSuspended'
 import { useServerNow } from '@/features/exam-room/useServerClock'
 import { LETTERS } from '@/features/exam-room/types'
 import { useMyResult, useRefetchAtRelease, type MyResult, type ResultQuestion } from '@/features/results/api'
@@ -30,7 +31,7 @@ export default function ResultPage() {
   if (result.isPending) return <Loading fullScreen />
   if (result.isError) {
     const code = studentErrorCode(result.error)
-    if (code === 'banned') return <Navigate to="/suspended" replace />
+    if (code === 'banned') return <GoSuspended />
     if (code === 'no_result') return <Navigate to={`/exam/${examId}`} replace />
     return (
       <ErrorState

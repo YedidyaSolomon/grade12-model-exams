@@ -306,7 +306,24 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
         <h1 className="text-2xl font-semibold">{isNew ? t('exams.createTitle') : t('exams.editTitle')}</h1>
         {exam && <StatusBadge status={exam.status} />}
         {dirty && <span className="text-xs text-muted-foreground">{t('exams.unsaved')}</span>}
+        {exam && (
+          <Button asChild variant="outline" size="sm" className="ml-auto">
+            <Link to={`/admin/exams/${exam.id}/manage`}>{t('exams.actions.manage')}</Link>
+          </Button>
+        )}
       </div>
+
+      {exam?.reexam_of && (
+        <Alert variant={exam.reexam_student_count === 0 ? 'warning' : 'default'}>
+          <AlertTitle>{t('reexam.editorTitle', { title: exam.reexam_of_title ?? '' })}</AlertTitle>
+          <AlertDescription>
+            {t('reexam.editorBody', { count: exam.reexam_student_count })}{' '}
+            <Link to={`/admin/exams/${exam.id}/manage?tab=reexams`} className="font-medium underline">
+              {t('reexam.manageStudents')}
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {showRestored && (
         <Alert>

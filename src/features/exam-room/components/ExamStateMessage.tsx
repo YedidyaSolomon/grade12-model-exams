@@ -42,7 +42,11 @@ export function ExamStateMessage({ exam, av, nowMs }: { exam: DashboardExam; av:
       break
     case 'closed':
       icon = <Lock className="size-5" aria-hidden />
-      text = exam.reexam_pending ? t('state.reexamPending') : t('state.closedRequest')
+      text = exam.reexam_request
+        ? t(`state.reexam.${exam.reexam_request.status}`)
+        : exam.can_request_reexam
+          ? t('state.closedRequest')
+          : t('state.closed')
       break
     default:
       return null

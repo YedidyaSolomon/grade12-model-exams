@@ -4,7 +4,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(19);
+select plan(21);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures: exam with an OPEN window; two students submitted and graded.
@@ -81,6 +81,10 @@ select is((current_setting('t.d')::jsonb ->> 'results_at')::timestamptz, now() +
 
 select throws_ok($$ select * from private.leaderboard $$, '42501', null,
   'student CANNOT read the leaderboard view directly');
+select throws_ok($$ select public.admin_exam_results('51000000-0000-0000-0000-000000000001') $$, '42501', null,
+  'student CANNOT read scores through the admin results RPC');
+select throws_ok($$ select public.admin_get_student('50000000-0000-0000-0000-000000000002') $$, '42501', null,
+  'student CANNOT read a classmate''s attempt history');
 
 -- A classmate who has not taken it yet can't see anyone's score either.
 select set_config('request.jwt.claims', '{"sub":"50000000-0000-0000-0000-000000000003","role":"authenticated"}', true);

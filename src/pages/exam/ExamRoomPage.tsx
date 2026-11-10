@@ -20,6 +20,8 @@ import {
   type TimedPayload,
 } from '@/features/exam-room/api'
 import { readQueue, useAnswerSync } from '@/features/exam-room/useAnswerSync'
+import { GoSuspended } from '@/auth/GoSuspended'
+import { useGoSuspended } from '@/auth/useGoSuspended'
 import { useServerNow } from '@/features/exam-room/useServerClock'
 import { Timer } from '@/features/exam-room/components/Timer'
 import { QuestionView } from '@/features/exam-room/components/QuestionView'
@@ -60,7 +62,7 @@ export default function ExamRoomPage() {
 
   if (attempt.isPending) return <Loading fullScreen />
   if (attempt.isError) {
-    if (studentErrorCode(attempt.error) === 'banned') return <Navigate to="/suspended" replace />
+    if (studentErrorCode(attempt.error) === 'banned') return <GoSuspended />
     return <ErrorState fullScreen message={errorMessage(attempt.error)} onRetry={() => void attempt.refetch()} />
   }
   if (!attempt.data) return <Navigate to={`/exam/${examId}`} replace />
@@ -104,12 +106,23 @@ function Room({ payload }: { payload: TimedPayload }) {
   // ---- submit -----------------------------------------------------------------
   const submitRef = useRef<(auto: boolean) => Promise<void>>(async () => {})
 
+  const goSuspended = useGoSuspended()
+  const forgetAttempt = useRef<() => void>(() => {})
   const onClosed = useCallback((code: StudentErrorCode) => {
-    if (code === 'banned') void navigate('/suspended', { replace: true })
-    else void submitRef.current(true) // time_up / already_submitted: finalise and leave
-  }, [navigate])
+    if (code === 'banned') {
+      // The ban closed the attempt on the server; drop this device's copy too.
+      forgetAttempt.current()
+      void goSuspended()
+    } else void submitRef.current(true) // time_up / already_submitted: finalise and leave
+  }, [goSuspended])
 
   const sync = useAnswerSync(payload.attempt_id, onClosed)
+  forgetAttempt.current = () => {
+    sync.clear()
+    safeStorage.remove(payloadKey(payload.exam_id))
+    safeStorage.remove(indexKey(payload.attempt_id))
+    queryClient.removeQueries({ queryKey: roomKeys.attempt(payload.exam_id) })
+  }
 
   submitRef.current = async (auto: boolean) => {
     if (submittingRef.current) return
@@ -132,7 +145,8 @@ function Room({ payload }: { payload: TimedPayload }) {
       } catch (e) {
         const code = studentErrorCode(e)
         if (code === 'banned') {
-          void navigate('/suspended', { replace: true })
+          forgetAttempt.current()
+          void goSuspended()
           return
         }
         if (!isNetworkError(e) && code !== null) {

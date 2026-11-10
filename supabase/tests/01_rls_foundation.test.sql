@@ -131,10 +131,10 @@ select throws_ok(
   $$ insert into public.reexam_requests (exam_id, reason, status)
      values ('22222222-0000-0000-0000-000000000002', 'I was sick', 'approved') $$,
   '42501', null, 'student CANNOT self-approve a re-exam request');
-select lives_ok(
+select throws_ok(
   $$ insert into public.reexam_requests (exam_id, reason)
      values ('22222222-0000-0000-0000-000000000002', 'I was sick that day') $$,
-  'student can file a pending re-exam request');
+  '42501', null, 'requests are filed only through request_reexam() (eligibility checks, 06_admin_control)');
 reset role;
 
 select is(

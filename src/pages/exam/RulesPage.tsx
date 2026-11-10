@@ -14,6 +14,8 @@ import { payloadKey, roomKeys, startExam, studentErrorCode, useStudentDashboard 
 import { useServerNow } from '@/features/exam-room/useServerClock'
 import { ExamStateMessage, availability } from '@/features/exam-room/components/ExamStateMessage'
 import type { DashboardExam } from '@/features/exam-room/types'
+import { GoSuspended } from '@/auth/GoSuspended'
+import { useGoSuspended } from '@/auth/useGoSuspended'
 
 export default function RulesPage() {
   const { examId = '' } = useParams()
@@ -22,7 +24,7 @@ export default function RulesPage() {
 
   if (dash.isPending) return <Loading fullScreen />
   if (dash.isError) return <ErrorState fullScreen message={errorMessage(dash.error)} onRetry={() => void dash.refetch()} />
-  if (dash.data.banned) return <Navigate to="/suspended" replace />
+  if (dash.data.banned) return <GoSuspended />
   const exam = dash.data.exams.find((e) => e.id === examId)
   if (!exam) {
     return (
@@ -41,6 +43,7 @@ function Rules({ exam, offset }: { exam: DashboardExam; offset: number }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const goSuspended = useGoSuspended()
   const now = useServerNow(offset)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -65,7 +68,7 @@ function Rules({ exam, offset }: { exam: DashboardExam; offset: number }) {
     } catch (e) {
       const code = studentErrorCode(e)
       if (code === 'banned') {
-        void navigate('/suspended', { replace: true })
+        void goSuspended()
         return
       }
       setError(code ? t(`errors.${code}`) : errorMessage(e))

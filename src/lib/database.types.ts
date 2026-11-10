@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          exam_id: string | null
+          id: number
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          exam_id?: string | null
+          id?: never
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          exam_id?: string | null
+          id?: never
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_audit_log_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exam_status"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "admin_audit_log_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_audit_log_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       answer_keys: {
         Row: {
           correct_option: Database["public"]["Enums"]["answer_option"]
@@ -222,6 +281,7 @@ export type Database = {
           duration_minutes: number
           id: string
           published_at: string | null
+          reexam_of: string | null
           source_file: string | null
           stream: Database["public"]["Enums"]["exam_stream"]
           subject: string
@@ -234,6 +294,7 @@ export type Database = {
           duration_minutes: number
           id?: string
           published_at?: string | null
+          reexam_of?: string | null
           source_file?: string | null
           stream?: Database["public"]["Enums"]["exam_stream"]
           subject: string
@@ -246,6 +307,7 @@ export type Database = {
           duration_minutes?: number
           id?: string
           published_at?: string | null
+          reexam_of?: string | null
           source_file?: string | null
           stream?: Database["public"]["Enums"]["exam_stream"]
           subject?: string
@@ -260,11 +322,26 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "exams_reexam_of_fkey"
+            columns: ["reexam_of"]
+            isOneToOne: false
+            referencedRelation: "exam_status"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "exams_reexam_of_fkey"
+            columns: ["reexam_of"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
         Row: {
           avatar_url: string | null
+          ban_reason: string | null
           banned_at: string | null
           created_at: string
           full_name: string | null
@@ -280,6 +357,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          ban_reason?: string | null
           banned_at?: string | null
           created_at?: string
           full_name?: string | null
@@ -295,6 +373,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          ban_reason?: string | null
           banned_at?: string | null
           created_at?: string
           full_name?: string | null
@@ -368,6 +447,7 @@ export type Database = {
           exam_id: string
           id: string
           reason: string
+          reexam_id: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: Database["public"]["Enums"]["reexam_status"]
@@ -379,6 +459,7 @@ export type Database = {
           exam_id: string
           id?: string
           reason: string
+          reexam_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["reexam_status"]
@@ -390,6 +471,7 @@ export type Database = {
           exam_id?: string
           id?: string
           reason?: string
+          reexam_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["reexam_status"]
@@ -411,6 +493,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reexam_requests_reexam_id_fkey"
+            columns: ["reexam_id"]
+            isOneToOne: false
+            referencedRelation: "exam_status"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "reexam_requests_reexam_id_fkey"
+            columns: ["reexam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reexam_requests_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
@@ -426,12 +522,73 @@ export type Database = {
           },
         ]
       }
+      reexam_students: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          exam_id: string
+          request_id: string | null
+          user_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          exam_id: string
+          request_id?: string | null
+          user_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          exam_id?: string
+          request_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reexam_students_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reexam_students_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exam_status"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "reexam_students_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reexam_students_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "reexam_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reexam_students_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       retake_grants: {
         Row: {
           created_at: string
           exam_id: string
           granted_by: string | null
           id: string
+          note: string | null
           request_id: string | null
           used: boolean
           used_at: string | null
@@ -442,6 +599,7 @@ export type Database = {
           exam_id: string
           granted_by?: string | null
           id?: string
+          note?: string | null
           request_id?: string | null
           used?: boolean
           used_at?: string | null
@@ -452,6 +610,7 @@ export type Database = {
           exam_id?: string
           granted_by?: string | null
           id?: string
+          note?: string | null
           request_id?: string | null
           used?: boolean
           used_at?: string | null
@@ -543,7 +702,32 @@ export type Database = {
       }
     }
     Functions: {
+      admin_add_reexam_students: {
+        Args: { p_reexam_id: string; p_user_ids: string[] }
+        Returns: number
+      }
+      admin_add_window: {
+        Args: {
+          p_ends_at: string
+          p_exam_id: string
+          p_starts_at: string
+          p_user_ids?: string[]
+        }
+        Returns: string
+      }
+      admin_create_reexam: { Args: { p_exam_id: string }; Returns: string }
+      admin_exam_control: { Args: { p_exam_id: string }; Returns: Json }
+      admin_exam_results: { Args: { p_exam_id: string }; Returns: Json }
+      admin_extend_window: {
+        Args: { p_ends_at: string; p_window_id: string }
+        Returns: Json
+      }
       admin_get_exam: { Args: { p_exam_id: string }; Returns: Json }
+      admin_get_student: { Args: { p_user_id: string }; Returns: Json }
+      admin_grant_retake: {
+        Args: { p_exam_id: string; p_note?: string; p_user_id: string }
+        Returns: string
+      }
       admin_list_exams: {
         Args: never
         Returns: {
@@ -556,6 +740,8 @@ export type Database = {
           next_starts_at: string
           published_at: string
           question_count: number
+          reexam_of: string
+          released: boolean
           status: Database["public"]["Enums"]["exam_state"]
           stream: Database["public"]["Enums"]["exam_stream"]
           subject: string
@@ -563,6 +749,34 @@ export type Database = {
           window_ends_at: string
           window_starts_at: string
         }[]
+      }
+      admin_list_reexam_requests: {
+        Args: { p_status?: Database["public"]["Enums"]["reexam_status"] }
+        Returns: Json
+      }
+      admin_list_students: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_status?: string
+          p_stream?: Database["public"]["Enums"]["stream_type"]
+        }
+        Returns: Json
+      }
+      admin_overview: { Args: never; Returns: Json }
+      admin_remove_reexam_student: {
+        Args: { p_reexam_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      admin_review_reexam_request: {
+        Args: { p_approve: boolean; p_note?: string; p_request_id: string }
+        Returns: Json
+      }
+      admin_revoke_retake: { Args: { p_grant_id: string }; Returns: undefined }
+      admin_set_ban: {
+        Args: { p_banned: boolean; p_reason?: string; p_user_id: string }
+        Returns: Json
       }
       admin_update_profile: {
         Args: {
@@ -574,6 +788,7 @@ export type Database = {
         }
         Returns: {
           avatar_url: string | null
+          ban_reason: string | null
           banned_at: string | null
           created_at: string
           full_name: string | null
@@ -610,6 +825,10 @@ export type Database = {
       is_banned_user: { Args: never; Returns: boolean }
       is_valid_options: { Args: { o: Json }; Returns: boolean }
       regrade_exam: { Args: { p_exam_id: string }; Returns: number }
+      request_reexam: {
+        Args: { p_exam_id: string; p_reason: string }
+        Returns: Json
+      }
       save_answer: {
         Args: {
           p_attempt_id: string

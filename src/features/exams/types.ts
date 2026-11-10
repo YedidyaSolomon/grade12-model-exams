@@ -47,6 +47,11 @@ export type AdminExam = {
   created_at: string
   updated_at: string
   status: ExamState
+  released: boolean
+  /** set for a re-exam: the original exam it was copied from */
+  reexam_of: string | null
+  reexam_of_title: string | null
+  reexam_student_count: number
   attempt_count: number
   window: { id: string; starts_at: string; ends_at: string } | null
   questions: {

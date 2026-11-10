@@ -396,6 +396,11 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Ban / unban (Phase 5). The function verifies the caller itself (auth.getUser) and the
+# database checks is_admin(), so the gateway JWT check is off (works with any JWT signing keys).
+[functions.admin-ban]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

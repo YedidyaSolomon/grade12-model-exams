@@ -123,19 +123,19 @@ select throws_ok($$ select * from private.leaderboard $$, '42501', null,
 reset role;
 
 -- ---------------------------------------------------------------------------
--- A new reopen window (even a restricted one) withdraws results until it ends too.
+-- Released results are never hidden again: no new window after release (Phase 5 rule;
+-- re-exams are separate exams). Window changes before release: 06_admin_control.
 -- ---------------------------------------------------------------------------
-insert into public.exam_windows (exam_id, starts_at, ends_at, is_reopen, restricted)
-values ('41000000-0000-0000-0000-000000000001', now() + interval '1 day', now() + interval '2 days', true, true);
+select throws_ok($$ insert into public.exam_windows (exam_id, starts_at, ends_at, is_reopen, restricted)
+  values ('41000000-0000-0000-0000-000000000001', now() + interval '1 day', now() + interval '2 days', true, true) $$,
+  '55000', 'results_released', 'after release: a reopen window cannot be added');
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"40000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
 select set_config('t.r3', public.get_my_result('41000000-0000-0000-0000-000000000001')::text, true);
-select is((current_setting('t.r3')::jsonb ->> 'released')::boolean, false, 'pending reopen window: not released');
-select ok(not (current_setting('t.r3')::jsonb ?| array['score', 'rank', 'questions']),
-  'pending reopen window: score, rank and answers withheld again');
-select is((current_setting('t.r3')::jsonb ->> 'release_at')::timestamptz, now() + interval '2 days',
-  'release time is the end of the LAST window');
+select is((current_setting('t.r3')::jsonb ->> 'released')::boolean, true, 'results stay released');
+select ok(current_setting('t.r3')::jsonb ?& array['score', 'rank', 'questions'],
+  'score, rank and answers stay visible');
 reset role;
 
 select * from finish();

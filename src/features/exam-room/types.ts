@@ -54,6 +54,17 @@ export type DashboardExam = {
   } | null
   has_retake: boolean
   reexam_pending: boolean
+  /** a re-exam this student was approved for */
+  is_reexam: boolean
+  /** the student's latest re-exam request for this exam */
+  reexam_request: {
+    status: Enums<'reexam_status'>
+    admin_note: string | null
+    created_at: string
+    reviewed_at: string | null
+  } | null
+  /** closed, never started, no pending/approved request (checked again by request_reexam) */
+  can_request_reexam: boolean
   /** every window has ended: scores, ranks and answers are published */
   released: boolean
   /** when results are published (end of the last window) */
@@ -77,5 +88,10 @@ export const STUDENT_ERROR_CODES = [
   'already_submitted',
   'invalid_answers',
   'no_result',
+  // request_reexam
+  'not_closed',
+  'request_pending',
+  'request_approved',
+  'invalid_reason',
 ] as const
 export type StudentErrorCode = (typeof STUDENT_ERROR_CODES)[number]
