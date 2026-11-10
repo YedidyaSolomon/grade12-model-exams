@@ -36,6 +36,17 @@ Rules:
 - `supabase/seed.sql` is **not** applied by `db push`. It is only useful for a local
   stack. On the cloud dev project, create test data through the app.
 
+### Auto-submit job
+
+`pg_cron` runs `private.auto_submit_expired()` every minute (job
+`auto-submit-expired-attempts`). It closes and grades attempts more than 30 s past their
+deadline. To check it in the SQL Editor:
+
+```sql
+select * from cron.job where jobname = 'auto-submit-expired-attempts';
+select status, return_message, start_time from cron.job_run_details order by start_time desc limit 5;
+```
+
 ### Test users (dev project)
 
 Telegram can't redirect to `localhost`, so `npm run dev` shows an email/password form when

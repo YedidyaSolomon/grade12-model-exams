@@ -41,6 +41,17 @@ export function isoToEatInput(iso: string): string {
   return shifted.toISOString().slice(0, 16)
 }
 
+/** "3d 4h" when a day or more away, otherwise "1:05:09" / "05:09". */
+export function formatCountdown(ms: number): string {
+  const day = 24 * 60 * 60 * 1000
+  if (ms >= day) {
+    const d = Math.floor(ms / day)
+    const h = Math.floor((ms % day) / 3_600_000)
+    return `${d}d ${h}h`
+  }
+  return formatDuration(ms)
+}
+
 /** "1:05:09" / "05:09" from milliseconds (never negative). */
 export function formatDuration(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000))

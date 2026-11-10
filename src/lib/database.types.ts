@@ -565,6 +565,26 @@ export type Database = {
         }[]
       }
       create_exam: { Args: { payload: Json }; Returns: string }
+      get_open_attempt: { Args: { p_exam_id: string }; Returns: Json }
+      save_answer: {
+        Args: {
+          p_attempt_id: string
+          p_flagged?: boolean
+          p_option: Database["public"]["Enums"]["answer_option"]
+          p_question_id: string
+        }
+        Returns: Json
+      }
+      save_answers: {
+        Args: { p_answers: Json; p_attempt_id: string }
+        Returns: Json
+      }
+      start_exam: { Args: { p_exam_id: string }; Returns: Json }
+      student_dashboard: { Args: never; Returns: Json }
+      submit_exam: {
+        Args: { p_answers?: Json; p_attempt_id: string }
+        Returns: Json
+      }
       delete_exam: { Args: { p_exam_id: string }; Returns: undefined }
       regrade_exam: { Args: { p_exam_id: string }; Returns: number }
       update_answer_keys: {
