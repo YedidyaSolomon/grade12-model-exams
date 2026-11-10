@@ -47,6 +47,15 @@ select * from cron.job where jobname = 'auto-submit-expired-attempts';
 select status, return_message, start_time from cron.job_run_details order by start_time desc limit 5;
 ```
 
+### Live leaderboard (Realtime)
+
+When an attempt is submitted or re-graded, a trigger calls `realtime.send` on the public
+broadcast channel `leaderboard:<exam_id>`. The message contains only the exam id. Clients
+then re-fetch through `get_leaderboard()`, which checks permissions and never returns user
+ids. This needs **Realtime → Settings → "Allow public access"** to stay enabled (the
+default). If Realtime is unavailable, the page falls back to refreshing every minute and
+shows "Updates every minute" instead of "Live".
+
 ### Test users (dev project)
 
 Telegram can't redirect to `localhost`, so `npm run dev` shows an email/password form when

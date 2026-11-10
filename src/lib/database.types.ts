@@ -564,37 +564,6 @@ export type Database = {
           window_starts_at: string
         }[]
       }
-      create_exam: { Args: { payload: Json }; Returns: string }
-      get_open_attempt: { Args: { p_exam_id: string }; Returns: Json }
-      save_answer: {
-        Args: {
-          p_attempt_id: string
-          p_flagged?: boolean
-          p_option: Database["public"]["Enums"]["answer_option"]
-          p_question_id: string
-        }
-        Returns: Json
-      }
-      save_answers: {
-        Args: { p_answers: Json; p_attempt_id: string }
-        Returns: Json
-      }
-      start_exam: { Args: { p_exam_id: string }; Returns: Json }
-      student_dashboard: { Args: never; Returns: Json }
-      submit_exam: {
-        Args: { p_answers?: Json; p_attempt_id: string }
-        Returns: Json
-      }
-      delete_exam: { Args: { p_exam_id: string }; Returns: undefined }
-      regrade_exam: { Args: { p_exam_id: string }; Returns: number }
-      update_answer_keys: {
-        Args: { p_exam_id: string; p_keys: Json }
-        Returns: Json
-      }
-      update_exam: {
-        Args: { p_exam_id: string; payload: Json }
-        Returns: string
-      }
       admin_update_profile: {
         Args: {
           p_full_name?: string
@@ -625,14 +594,50 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_exam: { Args: { payload: Json }; Returns: string }
       current_stream: {
         Args: never
         Returns: Database["public"]["Enums"]["stream_type"]
       }
+      delete_exam: { Args: { p_exam_id: string }; Returns: undefined }
+      get_leaderboard: {
+        Args: { p_exam_id: string; p_limit?: number }
+        Returns: Json
+      }
+      get_my_result: { Args: { p_exam_id: string }; Returns: Json }
+      get_open_attempt: { Args: { p_exam_id: string }; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
       is_banned_user: { Args: never; Returns: boolean }
       is_valid_options: { Args: { o: Json }; Returns: boolean }
+      regrade_exam: { Args: { p_exam_id: string }; Returns: number }
+      save_answer: {
+        Args: {
+          p_attempt_id: string
+          p_flagged?: boolean
+          p_option: Database["public"]["Enums"]["answer_option"]
+          p_question_id: string
+        }
+        Returns: Json
+      }
+      save_answers: {
+        Args: { p_answers: Json; p_attempt_id: string }
+        Returns: Json
+      }
       server_now: { Args: never; Returns: string }
+      start_exam: { Args: { p_exam_id: string }; Returns: Json }
+      student_dashboard: { Args: never; Returns: Json }
+      submit_exam: {
+        Args: { p_answers?: Json; p_attempt_id: string }
+        Returns: Json
+      }
+      update_answer_keys: {
+        Args: { p_exam_id: string; p_keys: Json }
+        Returns: Json
+      }
+      update_exam: {
+        Args: { p_exam_id: string; payload: Json }
+        Returns: string
+      }
     }
     Enums: {
       answer_option: "A" | "B" | "C" | "D"

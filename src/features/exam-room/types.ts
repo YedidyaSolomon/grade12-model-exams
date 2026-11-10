@@ -48,9 +48,13 @@ export type DashboardExam = {
     auto_submitted: boolean
     score: number | null
     max_score: number | null
+    rank: number | null
+    total: number | null
   } | null
   has_retake: boolean
   reexam_pending: boolean
+  /** every window has ended: correct answers visible on the result page */
+  revealed: boolean
 }
 
 export type Dashboard = { server_now: string; banned: boolean; exams: DashboardExam[] }
@@ -69,5 +73,6 @@ export const STUDENT_ERROR_CODES = [
   'attempt_not_found',
   'already_submitted',
   'invalid_answers',
+  'no_result',
 ] as const
 export type StudentErrorCode = (typeof STUDENT_ERROR_CODES)[number]

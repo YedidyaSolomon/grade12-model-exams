@@ -122,9 +122,9 @@ function Room({ payload }: { payload: TimedPayload }) {
         safeStorage.remove(indexKey(payload.attempt_id))
         queryClient.removeQueries({ queryKey: roomKeys.attempt(payload.exam_id) })
         void queryClient.invalidateQueries({ queryKey: roomKeys.dashboard })
-        void navigate(`/exam/${payload.exam_id}/done`, {
+        void navigate(`/exam/${payload.exam_id}/result`, {
           replace: true,
-          state: { auto: auto || res.auto_submitted, late: res.late },
+          state: { justSubmitted: true, auto: auto || res.auto_submitted, late: res.late },
         })
         return
       } catch (e) {

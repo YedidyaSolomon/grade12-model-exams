@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate } from 'react-router'
-import { CalendarClock, CheckCircle2, Clock, Radio } from 'lucide-react'
+import { CalendarClock, CheckCircle2, Clock, Radio, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState, ErrorState, Loading } from '@/components/states'
@@ -131,15 +131,33 @@ function ScoreLine({ exam }: { exam: DashboardExam }) {
   if (!a?.submitted_at) return null
   const pct = a.max_score ? Math.round(((a.score ?? 0) / a.max_score) * 100) : 0
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-      <span className="text-lg font-semibold tabular-nums">
-        {a.score ?? 0}/{a.max_score ?? 0}
-      </span>
-      <span className="tabular-nums text-muted-foreground">{pct}%</span>
-      {a.auto_submitted && <Badge variant="secondary">{t('dashboard.autoSubmitted')}</Badge>}
-      <span className="w-full text-xs text-muted-foreground">
-        {t('dashboard.submittedAt', { time: formatEAT(a.submitted_at) })} · {t('dashboard.rankSoon')}
-      </span>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        <span className="text-lg font-semibold tabular-nums">
+          {a.score ?? 0}/{a.max_score ?? 0}
+        </span>
+        <span className="tabular-nums text-muted-foreground">{pct}%</span>
+        {a.rank && (
+          <span className="font-medium tabular-nums">
+            {t('dashboard.rank', { rank: a.rank, total: a.total ?? a.rank })}
+          </span>
+        )}
+        {a.auto_submitted && <Badge variant="secondary">{t('dashboard.autoSubmitted')}</Badge>}
+        <span className="w-full text-xs text-muted-foreground">
+          {t('dashboard.submittedAt', { time: formatEAT(a.submitted_at) })}
+          {!exam.revealed && ` · ${t('dashboard.answersAfterClose')}`}
+        </span>
+      </div>
+      <div className="flex gap-2">
+        <Button asChild size="sm" variant="outline" className="flex-1">
+          <Link to={`/exam/${exam.id}/result`}>{t('dashboard.viewResult')}</Link>
+        </Button>
+        <Button asChild size="sm" variant="outline" className="flex-1">
+          <Link to={`/exam/${exam.id}/leaderboard`}>
+            <Trophy aria-hidden /> {t('dashboard.leaderboard')}
+          </Link>
+        </Button>
+      </div>
     </div>
   )
 }

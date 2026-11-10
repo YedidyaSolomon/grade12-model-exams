@@ -69,7 +69,49 @@
     "resume": "Resume exam",
     "autoSubmitted": "Auto-submitted",
     "submittedAt": "Submitted {{time}}",
-    "rankSoon": "Rank and answers appear after the exam closes"
+    "answersAfterClose": "correct answers after the exam closes",
+    "rank": "Rank #{{rank}} of {{total}}",
+    "viewResult": "View result",
+    "leaderboard": "Leaderboard"
+  },
+  "result": {
+    "score": "Score",
+    "percentage": "Percentage",
+    "rank": "Rank",
+    "ofTotal": "of {{count}}",
+    "timeTaken": "Time taken {{time}}",
+    "retake": "Retake",
+    "viewLeaderboard": "View leaderboard",
+    "review": "Your answers",
+    "answeredCount": "{{answered}} of {{total}} answered",
+    "correctCount": "{{correct}} of {{total}} correct",
+    "revealAt": "Correct answers will be shown after the exam closes ({{time}}).",
+    "revealLater": "Correct answers will be shown after the exam closes.",
+    "filterLabel": "Filter questions",
+    "filter": {
+      "all": "All",
+      "wrong": "Wrong",
+      "unanswered": "Unanswered"
+    },
+    "questionN": "Question {{number}}",
+    "yourAnswer": "Your answer",
+    "correctAnswer": "Correct answer",
+    "correct": "Correct",
+    "wrong": "Wrong",
+    "unanswered": "Not answered",
+    "answered": "Answered"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "participants_one": "{{count}} participant",
+    "participants_other": "{{count}} participants",
+    "live": "Live",
+    "notLive": "Updates every minute",
+    "yourPosition": "Your position",
+    "you": "you",
+    "empty": "No results yet.",
+    "topN": "Top {{count}}",
+    "showingTop": "Showing the top {{shown}} of {{total}}"
   },
   "state": {
     "startsIn": "Starts in {{countdown}} ({{time}})",
@@ -156,7 +198,8 @@
     "time_up": "Time is up for this exam.",
     "attempt_not_found": "Exam attempt not found.",
     "already_submitted": "This exam was already submitted.",
-    "invalid_answers": "Some answers could not be saved."
+    "invalid_answers": "Some answers could not be saved.",
+    "no_result": "You have no result for this exam yet."
   },
   "suspended": {
     "title": "Account suspended",
