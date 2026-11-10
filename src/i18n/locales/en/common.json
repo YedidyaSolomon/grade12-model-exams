@@ -1,0 +1,76 @@
+{
+  "app": {
+    "name": "Grade 12 Model Exams",
+    "tagline": "Practice for the national exam with timed model exams."
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Try again",
+    "signOut": "Sign out",
+    "save": "Save",
+    "saving": "Saving…",
+    "back": "Back",
+    "errorTitle": "Something went wrong",
+    "errorGeneric": "Please check your connection and try again.",
+    "required": "Required"
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Use your Telegram account to sign in.",
+    "telegram": "Continue with Telegram",
+    "redirecting": "Opening Telegram…",
+    "failed": "Sign-in failed: {{message}}",
+    "devTitle": "Developer login (dev only)",
+    "devHint": "Test users created in the dev project's dashboard",
+    "email": "Email",
+    "password": "Password",
+    "devSubmit": "Sign in (dev)"
+  },
+  "callback": {
+    "finishing": "Finishing sign-in…",
+    "failed": "We couldn't sign you in.",
+    "backToLogin": "Back to sign in"
+  },
+  "profile": {
+    "title": "Complete your profile",
+    "subtitle": "We need a few details before you can take exams.",
+    "fullName": "Full name",
+    "fullNameHint": "As it should appear on results and the leaderboard.",
+    "school": "School",
+    "schoolPlaceholder": "e.g. Menelik II Preparatory",
+    "stream": "Stream",
+    "streamWarning": "Choose carefully: after saving, only an admin can change your stream.",
+    "streamLocked": "Only an admin can change your stream.",
+    "natural": "Natural science",
+    "social": "Social science",
+    "submit": "Save and continue",
+    "errors": {
+      "fullName": "Enter your full name (2–120 characters).",
+      "school": "Enter your school (2–160 characters).",
+      "stream": "Choose your stream."
+    }
+  },
+  "dashboard": {
+    "greeting": "Hello, {{name}}",
+    "live": "Live now",
+    "liveEmpty": "No exam is live right now.",
+    "upcoming": "Upcoming",
+    "upcomingEmpty": "No upcoming exams yet. Check back soon.",
+    "completed": "Completed",
+    "completedEmpty": "You haven't completed any exams yet."
+  },
+  "suspended": {
+    "title": "Account suspended",
+    "body": "Your account has been suspended. Please contact the admin."
+  },
+  "admin": {
+    "title": "Admin",
+    "overview": "Overview",
+    "overviewSoon": "Exam management arrives in Phase 2. You are signed in as an admin.",
+    "studentView": "Student view"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "home": "Go home"
+  }
+}
