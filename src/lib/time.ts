@@ -26,6 +26,21 @@ export function formatTimeEAT(value: string | Date): string {
   return timeFmt.format(new Date(value))
 }
 
+/**
+ * <input type="datetime-local"> values are always interpreted as EAT, whatever the admin's
+ * device timezone is. Ethiopia has no DST, so a fixed +03:00 offset is exact.
+ */
+export function eatInputToIso(value: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null
+  const d = new Date(`${value}:00+03:00`)
+  return Number.isNaN(d.getTime()) ? null : d.toISOString()
+}
+
+export function isoToEatInput(iso: string): string {
+  const shifted = new Date(new Date(iso).getTime() + 3 * 60 * 60 * 1000)
+  return shifted.toISOString().slice(0, 16)
+}
+
 /** "1:05:09" / "05:09" from milliseconds (never negative). */
 export function formatDuration(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000))

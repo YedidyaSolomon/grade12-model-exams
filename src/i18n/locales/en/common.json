@@ -12,7 +12,9 @@
     "back": "Back",
     "errorTitle": "Something went wrong",
     "errorGeneric": "Please check your connection and try again.",
-    "required": "Required"
+    "required": "Required",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   },
   "login": {
     "title": "Sign in",
@@ -66,8 +68,159 @@
   "admin": {
     "title": "Admin",
     "overview": "Overview",
-    "overviewSoon": "Exam management arrives in Phase 2. You are signed in as an admin.",
+    "overviewSoon": "Stats arrive in Phase 5. Manage exams from the Exams page.",
+    "exams": "Exams",
     "studentView": "Student view"
+  },
+  "exams": {
+    "listTitle": "Exams",
+    "createTitle": "Create exam",
+    "editTitle": "Edit exam",
+    "filterLabel": "Filter by status",
+    "filterAll": "All",
+    "search": "Search title or subject",
+    "emptyAll": "No exams yet. Create the first one.",
+    "emptyFiltered": "No exams match this filter.",
+    "noWindow": "No window set",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "unsaved": "Unsaved changes",
+    "restoredDraft": "Restored your unsaved exam from this device.",
+    "liveEditWarning": "This exam is live. Students can start at any moment; once anyone starts, only answer keys can be changed.",
+    "detailsHeading": "Exam details",
+    "questionsHeading": "Questions",
+    "summary_one": "{{count}} question · {{points}} points",
+    "summary_other": "{{count}} questions · {{points}} points",
+    "noQuestionsYet": "No questions yet. Add them with the form above.",
+    "readyToPublish": "No problems. Ready to publish.",
+    "fixBeforePublish_one": "Fix {{count}} problem before publishing",
+    "fixBeforePublish_other": "Fix {{count}} problems before publishing",
+    "questionsWithProblems_one": "{{count}} question has problems",
+    "questionsWithProblems_other": "{{count}} questions have problems",
+    "serverRejected": "The server rejected the exam:",
+    "status": {
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "live": "Live",
+      "closed": "Closed"
+    },
+    "stream": {
+      "both": "Both streams",
+      "natural": "Natural",
+      "social": "Social"
+    },
+    "cols": {
+      "exam": "Exam",
+      "stream": "Stream",
+      "window": "Window (EAT)",
+      "duration": "Duration",
+      "questions": "Questions",
+      "attempts": "Attempts",
+      "status": "Status"
+    },
+    "fields": {
+      "title": "Title",
+      "titlePlaceholder": "e.g. Mathematics Model Exam 1",
+      "subject": "Subject",
+      "subjectPlaceholder": "e.g. Mathematics",
+      "stream": "Stream",
+      "duration": "Duration (minutes)",
+      "windowStart": "Window opens",
+      "windowEnd": "Window closes",
+      "windowHint": "Times are East Africa Time (EAT, UTC+3). Students can start any time inside the window; late starters get less time."
+    },
+    "tabs": {
+      "manual": "Manual entry",
+      "upload": "Upload file",
+      "uploadSoon": "Excel, Word and PDF upload arrives in Phase 6. Uploaded questions will appear in the same preview table."
+    },
+    "form": {
+      "addTitle": "Add question {{number}}",
+      "editTitle": "Edit question {{number}}",
+      "question": "Question",
+      "optionsLegend": "Options (select the correct one)",
+      "markCorrect": "Mark {{letter}} as correct",
+      "correctHint": "Tap the circle next to the correct answer.",
+      "points": "Points",
+      "addImage": "Add image (optional)",
+      "uploading": "Uploading…",
+      "removeImage": "Remove image",
+      "add": "Add question",
+      "update": "Update question"
+    },
+    "preview": {
+      "caption": "Question preview",
+      "question": "Question",
+      "options": "Options",
+      "answer": "Answer",
+      "answerFor": "Correct answer for question {{number}}",
+      "points": "Pts",
+      "problems": "Problems",
+      "actions": "Actions",
+      "ok": "No problems",
+      "empty": "(empty)",
+      "moveUp": "Move question {{number}} up",
+      "moveDown": "Move question {{number}} down",
+      "edit": "Edit question {{number}}",
+      "delete": "Delete question {{number}}"
+    },
+    "locked": {
+      "title_one": "{{count}} student has already started this exam",
+      "title_other": "{{count}} students have already started this exam",
+      "body": "Questions, options and timing are locked. You can still correct answer keys; submitted attempts are re-graded automatically."
+    },
+    "actions": {
+      "create": "Create exam",
+      "edit": "Edit",
+      "view": "View",
+      "delete": "Delete exam",
+      "deleteNamed": "Delete {{title}}",
+      "saveDraft": "Save draft",
+      "publish": "Publish",
+      "saveChanges": "Save changes",
+      "unpublish": "Unpublish",
+      "saveKeys": "Save answer keys",
+      "renumber": "Renumber 1…n"
+    },
+    "notice": {
+      "created": "Exam saved.",
+      "saved": "Changes saved.",
+      "unpublished": "Exam moved back to draft.",
+      "regraded": "Updated {{changed}} answer key(s); re-graded {{regraded}} attempt(s)."
+    },
+    "confirm": {
+      "delete": "Delete",
+      "discard": "Discard",
+      "discardTitle": "Discard the unsaved exam on this device?",
+      "deleteQuestionTitle": "Delete question {{number}}?",
+      "deleteExamTitle": "Delete this exam?",
+      "deleteExamBody": "\"{{title}}\" and all its questions will be permanently deleted.",
+      "publishTitle": "Publish this exam?",
+      "publishBody": "{{count}} questions. Students will see it and can start between {{start}} and {{end}}.",
+      "unpublishTitle": "Unpublish this exam?",
+      "unpublishBody": "Students will no longer see it until you publish again.",
+      "keysTitle": "Change answer keys?",
+      "keysBody": "{{count}} answer key(s) will change and all {{attempts}} submitted attempt(s) will be re-graded."
+    }
+  },
+  "problems": {
+    "emptyQuestion": "Question text is empty",
+    "optionCount": "Has {{count}} options (needs 4)",
+    "emptyOptions": "Empty option: {{letters}}",
+    "missingAnswer": "Missing correct answer",
+    "points": "Points must be 1–100",
+    "numberingGap": "Numbering gap: missing {{numbers}}",
+    "numberingDuplicate": "Duplicate numbers: {{numbers}}",
+    "title": "Title must be 3–200 characters",
+    "subject": "Subject must be 2–80 characters",
+    "duration": "Duration must be 1–600 minutes",
+    "windowRequired": "Set the exam window (opens / closes)",
+    "windowInvalid": "Window dates are incomplete",
+    "windowOrder": "Window must close after it opens",
+    "windowTooShort": "Window is shorter than the exam duration",
+    "windowEnded": "Window has already closed",
+    "noQuestions": "Add at least one question",
+    "tooManyQuestions": "Too many questions (maximum 300)"
   },
   "notFound": {
     "title": "Page not found",

@@ -1,11 +1,14 @@
 import { Link, NavLink, Outlet } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { LayoutDashboard, LogOut } from 'lucide-react'
+import { FileText, LayoutDashboard, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/auth/AuthProvider'
 import { cn } from '@/lib/utils'
 
-const NAV = [{ to: '/admin', key: 'admin.overview', icon: LayoutDashboard, end: true }] as const
+const NAV = [
+  { to: '/admin', key: 'admin.overview', icon: LayoutDashboard, end: true },
+  { to: '/admin/exams', key: 'admin.exams', icon: FileText, end: false },
+] as const
 
 export default function AdminLayout() {
   const { t } = useTranslation()

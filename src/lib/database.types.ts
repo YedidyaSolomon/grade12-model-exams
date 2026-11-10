@@ -543,6 +543,38 @@ export type Database = {
       }
     }
     Functions: {
+      admin_get_exam: { Args: { p_exam_id: string }; Returns: Json }
+      admin_list_exams: {
+        Args: never
+        Returns: {
+          attempt_count: number
+          created_at: string
+          duration_minutes: number
+          id: string
+          last_ends_at: string
+          live_ends_at: string
+          next_starts_at: string
+          published_at: string
+          question_count: number
+          status: Database["public"]["Enums"]["exam_state"]
+          stream: Database["public"]["Enums"]["exam_stream"]
+          subject: string
+          title: string
+          window_ends_at: string
+          window_starts_at: string
+        }[]
+      }
+      create_exam: { Args: { payload: Json }; Returns: string }
+      delete_exam: { Args: { p_exam_id: string }; Returns: undefined }
+      regrade_exam: { Args: { p_exam_id: string }; Returns: number }
+      update_answer_keys: {
+        Args: { p_exam_id: string; p_keys: Json }
+        Returns: Json
+      }
+      update_exam: {
+        Args: { p_exam_id: string; payload: Json }
+        Returns: string
+      }
       admin_update_profile: {
         Args: {
           p_full_name?: string
