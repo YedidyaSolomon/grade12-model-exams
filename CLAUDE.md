@@ -25,6 +25,15 @@ Development runs against the cloud dev project (no Docker). See README.md for se
      Don't re-grant them.
    - Realtime messages carry ids only, never scores.
    - Add a pgTAP assertion to `supabase/tests/05_results_hidden.test.sql` for any new path.
+   - **Once released, results are never hidden again.** After release, an exam's windows
+     can't be added, extended or reopened (enforce in the DB, not only the UI). Extending
+     or reopening a window BEFORE release is allowed (it simply moves the release time).
+   - **Re-exams after release (Phase 5): "Create re-exam"** makes a NEW exam that copies
+     the original's questions and answer keys, with the question order shuffled and each
+     question's option order shuffled (answer keys remapped to the new letters). It is
+     restricted to the approved students (restricted window + `window_allowed_users`),
+     starts as a draft that the admin can edit before publishing, and has its own separate
+     results and leaderboard. It never changes the original exam or its leaderboard.
 4. **Server clock only.** Use `now()` / `clock_timestamp()` for every time check. Store UTC,
    display East Africa Time (`Africa/Addis_Ababa`, UTC+3). Admin datetime inputs are EAT.
    In React, any time-based decision or countdown uses `useServerClock` / `useServerNow`

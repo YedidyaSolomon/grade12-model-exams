@@ -56,6 +56,8 @@
     "greeting": "Hello, {{name}}",
     "live": "Live now",
     "liveEmpty": "No exam is live right now.",
+    "adminLiveEmpty": "No published exams with an open window. Drafts and exams for another stream don't appear here. Create or publish one in Admin → Exams.",
+    "adminGoToExams": "Go to Admin → Exams",
     "upcoming": "Upcoming",
     "upcomingEmpty": "No upcoming exams yet. Check back soon.",
     "completed": "Completed",

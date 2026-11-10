@@ -29,13 +29,13 @@ export default function DashboardPage() {
       ) : dash.data.banned ? (
         <Navigate to="/suspended" replace />
       ) : (
-        <Sections exams={dash.data.exams} offset={dash.data.offset} />
+        <Sections exams={dash.data.exams} offset={dash.data.offset} isAdmin={profile.data?.role === 'admin'} />
       )}
     </div>
   )
 }
 
-function Sections({ exams, offset }: { exams: DashboardExam[]; offset: number }) {
+function Sections({ exams, offset, isAdmin }: { exams: DashboardExam[]; offset: number; isAdmin: boolean }) {
   const { t } = useTranslation()
   const now = useServerNow(offset)
 
@@ -48,7 +48,19 @@ function Sections({ exams, offset }: { exams: DashboardExam[]; offset: number })
     <>
       <Section icon={<Radio className="size-4 text-destructive" aria-hidden />} title={t('dashboard.live')}>
         {live.length === 0 ? (
-          <EmptyState title={t('dashboard.liveEmpty')} />
+          isAdmin ? (
+            // Admin-only hint; students just see the plain empty state.
+            <EmptyState
+              title={t('dashboard.adminLiveEmpty')}
+              action={
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/admin/exams">{t('dashboard.adminGoToExams')}</Link>
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState title={t('dashboard.liveEmpty')} />
+          )
         ) : (
           live.map(({ e, av }) => <LiveCard key={e.id} exam={e} av={av} now={now} />)
         )}
