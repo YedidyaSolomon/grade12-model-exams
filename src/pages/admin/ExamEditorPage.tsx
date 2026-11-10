@@ -8,7 +8,8 @@ import { Tabs } from '@/components/ui/tabs'
 import { ErrorState, Loading } from '@/components/states'
 import { useConfirm } from '@/components/ConfirmDialog'
 import { errorMessage, rpcProblems } from '@/lib/errors'
-import { formatEAT, eatInputToIso } from '@/lib/time'
+import { formatDuration, formatEAT, eatInputToIso } from '@/lib/time'
+import { useServerClock } from '@/features/exam-room/useServerClock'
 import {
   adminExamToDraft,
   useAdminExam,
@@ -95,7 +96,12 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
   const lastError = create.error ?? update.error ?? updateKeys.error ?? remove.error
   const serverProblems = rpcProblems(lastError)
 
-  const report = useMemo(() => analyzeDraft(draft), [draft])
+  // Window checks use the SERVER clock and re-run every 15 s, so a window that ends while
+  // the admin is editing is noticed, and a wrong device clock can't block or allow publishing.
+  const clock = useServerClock(0, 15_000)
+  const report = useMemo(() => analyzeDraft(draft, clock.now), [draft, clock.now])
+  const clockSkewMin = Math.round(clock.offset / 60_000)
+  const canPublish = report.publishable && clock.synced
   const editing = draft.questions.find((q) => q.key === editingKey) ?? null
   const nextNumber = draft.questions.reduce((m, q) => Math.max(m, q.number), 0) + 1
   const totalPoints = draft.questions.reduce((s, q) => s + (Number.isNaN(q.points) ? 0 : q.points), 0)
@@ -320,6 +326,16 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
           <AlertDescription>{t('exams.locked.body')}</AlertDescription>
         </Alert>
       )}
+      {clock.synced && Math.abs(clockSkewMin) >= 2 && (
+        <Alert variant="warning">
+          <AlertDescription>
+            {t(clockSkewMin < 0 ? 'exams.clockAhead' : 'exams.clockBehind', {
+              time: formatDuration(Math.abs(clock.offset)),
+              server: formatEAT(new Date(clock.now)),
+            })}
+          </AlertDescription>
+        </Alert>
+      )}
       {exam?.status === 'live' && !answersOnly && (
         <Alert variant="warning">
           <AlertDescription>{t('exams.liveEditWarning')}</AlertDescription>
@@ -409,15 +425,21 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
                 <p className="font-medium">{serverProblems.length ? t('exams.serverRejected') : errorMessage(lastError)}</p>
                 {serverProblems.length > 0 && <p className="line-clamp-2 text-xs">{serverProblems.join(' · ')}</p>}
               </div>
-            ) : notice ? (
-              <p className="text-success">{notice}</p>
-            ) : answersOnly ? null : report.publishable ? (
-              <p className="text-success">{t('exams.readyToPublish')}</p>
             ) : (
-              <ProblemSummary
-                exam={blockingProblems.map((p) => t(p.key, p.values ?? {}))}
-                questionCount={report.byQuestion.size}
-              />
+              // A notice never hides why Publish is disabled: both are shown.
+              <>
+                {notice && <p className="text-success">{notice}</p>}
+                {answersOnly ? null : !report.publishable ? (
+                  <ProblemSummary
+                    exam={blockingProblems.map((p) => t(p.key, p.values ?? {}))}
+                    questionCount={report.byQuestion.size}
+                  />
+                ) : !clock.synced ? (
+                  <p className="text-muted-foreground">{t('exams.checkingServerTime')}</p>
+                ) : (
+                  !notice && <p className="text-success">{t('exams.readyToPublish')}</p>
+                )}
+              </>
             )}
           </div>
 
@@ -436,7 +458,7 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
                 <Button variant="outline" onClick={() => void unpublish()} disabled={activeMutation}>
                   {t('exams.actions.unpublish')}
                 </Button>
-                <Button onClick={() => void save(true)} disabled={!report.publishable || activeMutation}>
+                <Button onClick={() => void save(true)} disabled={!canPublish || activeMutation}>
                   {t('exams.actions.saveChanges')}
                 </Button>
               </>
@@ -445,7 +467,7 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
                 <Button variant="outline" onClick={() => void save(false)} disabled={!report.savable || activeMutation}>
                   {t('exams.actions.saveDraft')}
                 </Button>
-                <Button onClick={() => void save(true)} disabled={!report.publishable || activeMutation}>
+                <Button onClick={() => void save(true)} disabled={!canPublish || activeMutation}>
                   {t('exams.actions.publish')}
                 </Button>
               </>

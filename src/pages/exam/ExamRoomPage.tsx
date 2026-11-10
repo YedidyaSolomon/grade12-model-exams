@@ -44,7 +44,9 @@ export default function ExamRoomPage() {
       } catch (e) {
         // Offline reload / phone restart: continue from the copy saved on the device.
         const cached = safeStorage.get<TimedPayload>(payloadKey(examId))
-        if (isNetworkError(e) && cached && new Date(cached.deadline_at).getTime() > Date.now() - 60_000) {
+        // Compare on the server's clock (offset saved with the payload), not the phone's.
+        const serverNow = Date.now() + (cached?.offset ?? 0)
+        if (isNetworkError(e) && cached && new Date(cached.deadline_at).getTime() > serverNow - 60_000) {
           return cached
         }
         throw e

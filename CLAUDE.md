@@ -27,6 +27,9 @@ Development runs against the cloud dev project (no Docker). See README.md for se
    - Add a pgTAP assertion to `supabase/tests/05_results_hidden.test.sql` for any new path.
 4. **Server clock only.** Use `now()` / `clock_timestamp()` for every time check. Store UTC,
    display East Africa Time (`Africa/Addis_Ababa`, UTC+3). Admin datetime inputs are EAT.
+   In React, any time-based decision or countdown uses `useServerClock` / `useServerNow`
+   (`src/features/exam-room/useServerClock.ts`), never `Date.now()` directly. Device clocks
+   can be hours off; one dev machine was 11 h fast, which silently blocked publishing.
 5. **Service role key only inside Edge Functions.** Never in frontend code or `VITE_*` vars.
 6. **Mobile-first, slow data.** Lazy-load non-student routes, keep payloads small, no heavy
    animations or images.

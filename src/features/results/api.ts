@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { useServerClock } from '@/features/exam-room/useServerClock'
 import type { OptionLetter } from '@/features/exam-room/types'
 
 export type ResultQuestion = {
@@ -96,14 +97,16 @@ export function useLeaderboard(examId: string) {
  * every student's page refreshes at the same moment.
  */
 export function useRefetchAtRelease(releaseAt: string | null | undefined, released: boolean, refetch: () => void) {
+  // Server clock, not the device's: a phone set hours off would otherwise fire too early/late.
+  const { offset, synced } = useServerClock(0, 60_000)
   useEffect(() => {
-    if (released || !releaseAt) return
-    const ms = new Date(releaseAt).getTime() - Date.now() + 2000 + Math.random() * 10_000
+    if (released || !releaseAt || !synced) return
+    const ms = new Date(releaseAt).getTime() - (Date.now() + offset) + 2000 + Math.random() * 10_000
     // setTimeout overflows above ~24.8 days; the fallback poll covers that case.
     if (ms > 2_000_000_000) return
     const h = window.setTimeout(refetch, Math.max(0, ms))
     return () => window.clearTimeout(h)
-  }, [releaseAt, released, refetch])
+  }, [releaseAt, released, refetch, offset, synced])
 }
 
 /**

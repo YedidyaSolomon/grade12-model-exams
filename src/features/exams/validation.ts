@@ -43,7 +43,8 @@ export function numberingProblems(questions: DraftQuestion[]): Problem[] {
   return p
 }
 
-export function examProblems(draft: ExamDraft, opts: { publish: boolean }): Problem[] {
+/** nowMs must be SERVER time (useServerClock), never Date.now(): device clocks can be hours off. */
+export function examProblems(draft: ExamDraft, opts: { publish: boolean; nowMs: number }): Problem[] {
   const p: Problem[] = []
   const title = draft.title.trim().length
   const subject = draft.subject.trim().length
@@ -66,7 +67,7 @@ export function examProblems(draft: ExamDraft, opts: { publish: boolean }): Prob
       const ms = new Date(e).getTime() - new Date(s).getTime()
       if (ms <= 0) p.push({ key: 'problems.windowOrder' })
       else if (durationOk && ms < duration * 60_000) p.push({ key: 'problems.windowTooShort' })
-      else if (opts.publish && new Date(e).getTime() <= Date.now()) p.push({ key: 'problems.windowEnded' })
+      else if (opts.publish && new Date(e).getTime() <= opts.nowMs) p.push({ key: 'problems.windowEnded' })
     }
   }
 
@@ -86,7 +87,7 @@ export type DraftReport = {
   savable: boolean
 }
 
-export function analyzeDraft(draft: ExamDraft): DraftReport {
+export function analyzeDraft(draft: ExamDraft, nowMs: number): DraftReport {
   const byQuestion = new Map<string, Problem[]>()
   let questionProblemCount = 0
   for (const q of draft.questions) {
@@ -97,8 +98,8 @@ export function analyzeDraft(draft: ExamDraft): DraftReport {
     }
   }
   const list = numberingProblems(draft.questions)
-  const examForPublish = examProblems(draft, { publish: true })
-  const examForDraft = examProblems(draft, { publish: false })
+  const examForPublish = examProblems(draft, { publish: true, nowMs })
+  const examForDraft = examProblems(draft, { publish: false, nowMs })
   const questionsOk = questionProblemCount === 0 && list.length === 0
   return {
     byQuestion,

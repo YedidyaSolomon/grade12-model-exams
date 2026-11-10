@@ -1,37 +1,52 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchServerOffset } from './api'
 
+export type ServerClock = {
+  /** current time on the SERVER's clock (ms since epoch) */
+  now: number
+  /** server time minus device time, in ms */
+  offset: number
+  /** true once the offset has been measured at least once in this mount */
+  synced: boolean
+}
+
 /**
- * Current time on the SERVER's clock, re-rendering every `tickMs`.
- * The phone's clock may be wrong; we only use it to measure elapsed time between
- * syncs. Re-syncs every 5 minutes and when the tab becomes visible again (phones
- * freeze timers in the background).
+ * The server's clock, re-rendering every `tickMs`. Device clocks can be hours off, so
+ * every time-based decision in the UI must use this, never Date.now() directly.
+ * Measures the offset on mount, every 5 minutes, and whenever the tab becomes visible
+ * (phones freeze timers in the background).
  */
-export function useServerNow(initialOffset: number, tickMs = 1000): number {
+export function useServerClock(initialOffset = 0, tickMs = 1000): ServerClock {
   const offsetRef = useRef(initialOffset)
-  const [now, setNow] = useState(() => Date.now() + initialOffset)
+  const [state, setState] = useState<ServerClock>(() => ({
+    now: Date.now() + initialOffset,
+    offset: initialOffset,
+    synced: false,
+  }))
 
   useEffect(() => {
     let cancelled = false
     const resync = () => {
       fetchServerOffset()
         .then((o) => {
-          if (!cancelled) offsetRef.current = o
+          if (cancelled) return
+          offsetRef.current = o
+          setState({ now: Date.now() + o, offset: o, synced: true })
         })
         .catch(() => {
           /* offline: keep last known offset */
         })
     }
-    const tick = window.setInterval(() => setNow(Date.now() + offsetRef.current), tickMs)
+    const tick = window.setInterval(
+      () => setState((s) => ({ ...s, now: Date.now() + offsetRef.current })),
+      tickMs,
+    )
     const sync = window.setInterval(resync, 5 * 60_000)
     const onVisible = () => {
-      if (document.visibilityState === 'visible') {
-        setNow(Date.now() + offsetRef.current)
-        resync()
-      }
+      if (document.visibilityState === 'visible') resync()
     }
     document.addEventListener('visibilitychange', onVisible)
-    resync() // one cheap call so countdowns don't rely on a wrong phone clock
+    resync()
     return () => {
       cancelled = true
       window.clearInterval(tick)
@@ -40,5 +55,10 @@ export function useServerNow(initialOffset: number, tickMs = 1000): number {
     }
   }, [tickMs])
 
-  return now
+  return state
+}
+
+/** Shorthand: just the server's current time. */
+export function useServerNow(initialOffset = 0, tickMs = 1000): number {
+  return useServerClock(initialOffset, tickMs).now
 }
