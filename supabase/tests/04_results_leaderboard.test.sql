@@ -1,8 +1,9 @@
--- Phase 4: results, answer reveal, leaderboard. Run: npm run db:test
+-- Phase 4: results and leaderboard AFTER the exam has closed. Run: npm run db:test
+-- (What students can NOT see before close is covered by 05_results_hidden.test.sql.)
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(17);
+select plan(16);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as postgres)
@@ -37,12 +38,11 @@ insert into public.attempts (id, exam_id, window_id, user_id, deadline_at)
 select ('44000000-0000-0000-0000-00000000000' || n)::uuid, '41000000-0000-0000-0000-000000000001',
        '42000000-0000-0000-0000-000000000001', ('40000000-0000-0000-0000-00000000000' || n)::uuid, now()
 from generate_series(1, 4) n;
--- also the admin (must not appear on the leaderboard)
 insert into public.attempts (id, exam_id, window_id, user_id, deadline_at) values
   ('44000000-0000-0000-0000-00000000000a', '41000000-0000-0000-0000-000000000001',
    '42000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-00000000000a', now());
 
--- Answers: fast/slow/banned/admin get both right (3 pts), low gets Q2 only (1 pt).
+-- fast/slow/banned/admin get both right (3 pts), low gets Q2 only (1 pt).
 insert into public.attempt_answers (attempt_id, question_id, selected_option)
 select a.id, q.id, k.correct_option
 from public.attempts a
@@ -64,8 +64,12 @@ select ok(
           where topic = 'leaderboard:41000000-0000-0000-0000-000000000001' and event = 'changed'),
   'submitting broadcasts a content-free leaderboard ping');
 
+-- Close the exam (its only window ends).
+update public.exam_windows set starts_at = now() - interval '3 hours', ends_at = now() - interval '1 minute'
+  where id = '42000000-0000-0000-0000-000000000001';
+
 -- ---------------------------------------------------------------------------
--- While the window is open
+-- Student results after close
 -- ---------------------------------------------------------------------------
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"40000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
@@ -73,15 +77,10 @@ select set_config('t.r', public.get_my_result('41000000-0000-0000-0000-000000000
 
 select results_eq(
   $$ select (r ->> 'score')::int, (r ->> 'max_score')::int, (r ->> 'rank')::int, (r ->> 'total')::int,
-            (r ->> 'revealed')::boolean
+            (r ->> 'released')::boolean
      from (select current_setting('t.r')::jsonb r) x $$,
-  $$ values (3, 3, 2, 3, false) $$,
-  'result: score, max, rank (2nd: same score, slower) of 3 ranked students; not revealed yet');
-select is(position('correct' in current_setting('t.r')), 0,
-  'before the window closes the result contains NO correct answers or right/wrong');
-select is(
-  current_setting('t.r')::jsonb -> 'questions' -> 0 ->> 'selected_option', 'B',
-  'student sees their own choices');
+  $$ values (3, 3, 2, 3, true) $$,
+  'after close: score, max, rank (2nd: same score, slower) of 3 ranked students');
 
 select set_config('t.lb', public.get_leaderboard('41000000-0000-0000-0000-000000000001')::text, true);
 select results_eq(
@@ -94,11 +93,23 @@ select is((current_setting('t.lb')::jsonb -> 'me' ->> 'rank')::int, 2, 'own posi
 select is(position('user_id' in current_setting('t.lb')), 0, 'leaderboard exposes no user ids');
 select is(position('40000000' in current_setting('t.lb')), 0, 'leaderboard leaks no ids at all');
 
+select set_config('request.jwt.claims', '{"sub":"40000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
+select results_eq(
+  $$ select q ->> 'correct_option', (q ->> 'is_correct')::boolean, q ->> 'selected_option'
+     from jsonb_array_elements(public.get_my_result('41000000-0000-0000-0000-000000000001') -> 'questions') q
+     order by (q ->> 'position')::int $$,
+  $$ values ('B', false, null), ('C', true, 'C') $$,
+  'after close: correct answers, right/wrong and own choices per question');
+select is(
+  (select (x -> 'attempt' ->> 'rank')::int from jsonb_array_elements(public.student_dashboard() -> 'exams') x
+   where x ->> 'id' = '41000000-0000-0000-0000-000000000001'),
+  3, 'dashboard includes the student''s rank after close');
+
 select set_config('request.jwt.claims', '{"sub":"40000000-0000-0000-0000-000000000005","role":"authenticated"}', true);
 select throws_ok($$ select public.get_my_result('41000000-0000-0000-0000-000000000001') $$,
   'P0001', 'no_result', 'no result for a student who did not submit');
 select is((public.get_leaderboard('41000000-0000-0000-0000-000000000001') -> 'me'), 'null'::jsonb,
-  'non-participant can view the leaderboard but has no own row');
+  'non-participant can view the released leaderboard but has no own row');
 
 select set_config('request.jwt.claims', '{"sub":"40000000-0000-0000-0000-000000000006","role":"authenticated"}', true);
 select throws_ok($$ select public.get_leaderboard('41000000-0000-0000-0000-000000000001') $$,
@@ -107,42 +118,24 @@ select throws_ok($$ select public.get_leaderboard('41000000-0000-0000-0000-00000
 select set_config('request.jwt.claims', '{"sub":"40000000-0000-0000-0000-000000000004","role":"authenticated"}', true);
 select throws_ok($$ select public.get_my_result('41000000-0000-0000-0000-000000000001') $$,
   'P0001', 'banned', 'banned student CANNOT read results');
-
 select throws_ok($$ select * from private.leaderboard $$, '42501', null,
   'leaderboard view is not directly readable');
 reset role;
 
 -- ---------------------------------------------------------------------------
--- After the (only) window closes: answers revealed
+-- A new reopen window (even a restricted one) withdraws results until it ends too.
 -- ---------------------------------------------------------------------------
-update public.exam_windows set starts_at = now() - interval '3 hours', ends_at = now() - interval '1 minute'
-  where id = '42000000-0000-0000-0000-000000000001';
+insert into public.exam_windows (exam_id, starts_at, ends_at, is_reopen, restricted)
+values ('41000000-0000-0000-0000-000000000001', now() + interval '1 day', now() + interval '2 days', true, true);
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"40000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
 select set_config('t.r3', public.get_my_result('41000000-0000-0000-0000-000000000001')::text, true);
-select is((current_setting('t.r3')::jsonb ->> 'revealed')::boolean, true, 'revealed after the window closes');
-select results_eq(
-  $$ select q ->> 'correct_option', (q ->> 'is_correct')::boolean
-     from jsonb_array_elements(current_setting('t.r3')::jsonb -> 'questions') q
-     order by (q ->> 'position')::int $$,
-  $$ values ('B', false), ('C', true) $$,
-  'after close: correct answers and right/wrong per question');
-select is(
-  (select x ->> 'rank' from jsonb_array_elements(public.student_dashboard() -> 'exams') x
-   where x ->> 'id' = '41000000-0000-0000-0000-000000000001') is null
-  and (select (x -> 'attempt' ->> 'rank')::int from jsonb_array_elements(public.student_dashboard() -> 'exams') x
-       where x ->> 'id' = '41000000-0000-0000-0000-000000000001') = 3,
-  true, 'dashboard includes the student''s rank');
-reset role;
-
--- A reopen window in the future hides answers again.
-insert into public.exam_windows (exam_id, starts_at, ends_at, is_reopen, restricted)
-values ('41000000-0000-0000-0000-000000000001', now() + interval '1 day', now() + interval '2 days', true, true);
-set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"40000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
-select is(position('correct' in public.get_my_result('41000000-0000-0000-0000-000000000001')::text), 0,
-  'a pending reopen window keeps answers hidden');
+select is((current_setting('t.r3')::jsonb ->> 'released')::boolean, false, 'pending reopen window: not released');
+select ok(not (current_setting('t.r3')::jsonb ?| array['score', 'rank', 'questions']),
+  'pending reopen window: score, rank and answers withheld again');
+select is((current_setting('t.r3')::jsonb ->> 'release_at')::timestamptz, now() + interval '2 days',
+  'release time is the end of the LAST window');
 reset role;
 
 select * from finish();

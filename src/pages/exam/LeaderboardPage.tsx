@@ -1,19 +1,32 @@
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
-import { ArrowLeft, Medal } from 'lucide-react'
+import { ArrowLeft, Lock, Medal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState, ErrorState, Loading } from '@/components/states'
 import { errorMessage } from '@/lib/errors'
-import { formatDuration } from '@/lib/time'
+import { formatCountdown, formatDuration, formatEAT } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import { studentErrorCode } from '@/features/exam-room/api'
-import { useLeaderboard, useLeaderboardLive, type LeaderboardRow } from '@/features/results/api'
+import { useServerNow } from '@/features/exam-room/useServerClock'
+import {
+  useLeaderboard,
+  useLeaderboardLive,
+  useRefetchAtRelease,
+  type Leaderboard,
+  type LeaderboardRow,
+} from '@/features/results/api'
 
 export default function LeaderboardPage() {
   const { examId = '' } = useParams()
   const { t } = useTranslation()
   const lb = useLeaderboard(examId)
-  const live = useLeaderboardLive(examId)
+  const released = lb.data?.released ?? false
+  // Realtime only once results are public; before that there is nothing to update.
+  const live = useLeaderboardLive(examId, released)
+  const { refetch: refetchLb } = lb
+  const refetch = useCallback(() => void refetchLb(), [refetchLb])
+  useRefetchAtRelease(lb.data?.release_at, lb.data ? released : true, refetch)
 
   return (
     <main className="mx-auto max-w-2xl space-y-4 p-4 pb-12">
@@ -30,48 +43,83 @@ export default function LeaderboardPage() {
           message={studentErrorCode(lb.error) ? t(`errors.${studentErrorCode(lb.error)}`) : errorMessage(lb.error)}
           onRetry={() => void lb.refetch()}
         />
+      ) : !lb.data.released ? (
+        <LockedBoard lb={lb.data} />
       ) : (
-        <>
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <h1 className="text-xl font-semibold">{t('leaderboard.title')}</h1>
-              <p className="text-sm text-muted-foreground">{lb.data.title}</p>
-            </div>
-            <div className="text-right text-xs text-muted-foreground">
-              <p>{t('leaderboard.participants', { count: lb.data.total })}</p>
-              <p className="flex items-center justify-end gap-1.5" aria-live="polite">
-                <span className={cn('size-2 rounded-full', live ? 'animate-pulse bg-success' : 'bg-muted-foreground/40')} aria-hidden />
-                {live ? t('leaderboard.live') : t('leaderboard.notLive')}
-              </p>
-            </div>
-          </div>
-
-          {lb.data.me && (
-            <div className="sticky top-2 z-10">
-              <p className="mb-1 text-xs font-medium text-muted-foreground">{t('leaderboard.yourPosition')}</p>
-              <Row row={lb.data.me} pinned />
-            </div>
-          )}
-
-          {lb.data.rows.length === 0 ? (
-            <EmptyState title={t('leaderboard.empty')} />
-          ) : (
-            <ol aria-label={t('leaderboard.topN', { count: lb.data.rows.length })} className="space-y-1.5">
-              {lb.data.rows.map((row, i) => (
-                <li key={`${row.rank}-${i}`}>
-                  <Row row={row} />
-                </li>
-              ))}
-            </ol>
-          )}
-          {lb.data.total > lb.data.rows.length && (
-            <p className="text-center text-xs text-muted-foreground">
-              {t('leaderboard.showingTop', { shown: lb.data.rows.length, total: lb.data.total })}
-            </p>
-          )}
-        </>
+        <ReleasedBoard lb={lb.data} live={live} />
       )}
     </main>
+  )
+}
+
+function LockedBoard({ lb }: { lb: Leaderboard }) {
+  const { t } = useTranslation()
+  const now = useServerNow(0) // syncs with the server on mount
+  const releaseMs = lb.release_at ? new Date(lb.release_at).getTime() : null
+  return (
+    <>
+      <div>
+        <h1 className="text-xl font-semibold">{t('leaderboard.title')}</h1>
+        <p className="text-sm text-muted-foreground">{lb.title}</p>
+      </div>
+      <div className="flex flex-col items-center gap-2 rounded-xl border bg-card p-8 text-center" role="status">
+        <Lock className="size-8 text-muted-foreground" aria-hidden />
+        <p className="font-medium">
+          {lb.release_at ? t('result.publishedAt', { time: formatEAT(lb.release_at) }) : t('result.publishedLater')}
+        </p>
+        {releaseMs && releaseMs > now && (
+          <p className="text-sm text-muted-foreground tabular-nums">
+            {t('result.publishedIn', { countdown: formatCountdown(releaseMs - now) })}
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground">{t('leaderboard.lockedHint')}</p>
+      </div>
+    </>
+  )
+}
+
+function ReleasedBoard({ lb, live }: { lb: Extract<Leaderboard, { released: true }>; live: boolean }) {
+  const { t } = useTranslation()
+  return (
+    <>
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-semibold">{t('leaderboard.title')}</h1>
+          <p className="text-sm text-muted-foreground">{lb.title}</p>
+        </div>
+        <div className="text-right text-xs text-muted-foreground">
+          <p>{t('leaderboard.participants', { count: lb.total })}</p>
+          <p className="flex items-center justify-end gap-1.5" aria-live="polite">
+            <span className={cn('size-2 rounded-full', live ? 'animate-pulse bg-success' : 'bg-muted-foreground/40')} aria-hidden />
+            {live ? t('leaderboard.live') : t('leaderboard.notLive')}
+          </p>
+        </div>
+      </div>
+
+      {lb.me && (
+        <div className="sticky top-2 z-10">
+          <p className="mb-1 text-xs font-medium text-muted-foreground">{t('leaderboard.yourPosition')}</p>
+          <Row row={lb.me} pinned />
+        </div>
+      )}
+
+      {lb.rows.length === 0 ? (
+        <EmptyState title={t('leaderboard.empty')} />
+      ) : (
+        <ol aria-label={t('leaderboard.topN', { count: lb.rows.length })} className="space-y-1.5">
+          {lb.rows.map((row, i) => (
+            <li key={`${row.rank}-${i}`}>
+              <Row row={row} />
+            </li>
+          ))}
+        </ol>
+      )}
+      {lb.total > lb.rows.length && (
+        <p className="text-center text-xs text-muted-foreground">
+          {t('leaderboard.showingTop', { shown: lb.rows.length, total: lb.total })}
+        </p>
+      )}
+    </>
   )
 }
 

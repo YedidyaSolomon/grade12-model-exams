@@ -17,24 +17,31 @@ export type ResultQuestion = {
   is_correct?: boolean
 }
 
-export type MyResult = {
+type ResultBase = {
   exam_id: string
   title: string
   subject: string
   attempt_id: string
   attempt_no: number
-  score: number
-  max_score: number
-  started_at: string
   submitted_at: string
   auto_submitted: boolean
-  time_taken_seconds: number
-  rank: number | null
-  total: number | null
-  revealed: boolean
-  reveal_at: string | null
-  questions: ResultQuestion[]
+  /** end of the exam's last window: when scores, ranks and answers are published */
+  release_at: string | null
 }
+
+/** Before the exam closes the server returns NO score, rank or answers. */
+export type MyResult =
+  | (ResultBase & { released: false })
+  | (ResultBase & {
+      released: true
+      score: number
+      max_score: number
+      started_at: string
+      time_taken_seconds: number
+      rank: number | null
+      total: number | null
+      questions: ResultQuestion[]
+    })
 
 export type LeaderboardRow = {
   rank: number
@@ -46,14 +53,12 @@ export type LeaderboardRow = {
   is_me: boolean
 }
 
-export type Leaderboard = {
-  exam_id: string
-  title: string
-  total: number
-  rows: LeaderboardRow[]
-  me: LeaderboardRow | null
-  server_now: string
-}
+type LeaderboardBase = { exam_id: string; title: string; release_at: string | null; server_now: string }
+
+/** Before the exam closes the server returns no rows (admins excepted). */
+export type Leaderboard =
+  | (LeaderboardBase & { released: false })
+  | (LeaderboardBase & { released: true; total: number; rows: LeaderboardRow[]; me: LeaderboardRow | null })
 
 export const resultKeys = {
   mine: (examId: string) => ['student', 'result', examId] as const,
@@ -68,8 +73,8 @@ export function useMyResult(examId: string) {
       if (error) throw error
       return data as unknown as MyResult
     },
-    // Until answers are revealed, check again each minute (rank also moves while others submit).
-    refetchInterval: (q) => (q.state.data && !q.state.data.revealed ? 60_000 : false),
+    // Fallback poll while locked; useRefetchAtRelease does the precise refresh.
+    refetchInterval: (q) => (q.state.data && !q.state.data.released ? 5 * 60_000 : false),
   })
 }
 
@@ -81,8 +86,24 @@ export function useLeaderboard(examId: string) {
       if (error) throw error
       return data as unknown as Leaderboard
     },
-    refetchInterval: 60_000, // fallback if Realtime is unavailable
+    // Locked: slow fallback poll. Released: fallback in case Realtime is unavailable.
+    refetchInterval: (q) => (q.state.data && !q.state.data.released ? 5 * 60_000 : 60_000),
   })
+}
+
+/**
+ * Refetch shortly after the release time. A random 2–12 s delay spreads the load when
+ * every student's page refreshes at the same moment.
+ */
+export function useRefetchAtRelease(releaseAt: string | null | undefined, released: boolean, refetch: () => void) {
+  useEffect(() => {
+    if (released || !releaseAt) return
+    const ms = new Date(releaseAt).getTime() - Date.now() + 2000 + Math.random() * 10_000
+    // setTimeout overflows above ~24.8 days; the fallback poll covers that case.
+    if (ms > 2_000_000_000) return
+    const h = window.setTimeout(refetch, Math.max(0, ms))
+    return () => window.clearTimeout(h)
+  }, [releaseAt, released, refetch])
 }
 
 /**
@@ -90,11 +111,12 @@ export function useLeaderboard(examId: string) {
  * appears or is re-graded, then re-fetches through the authorised RPC.
  * Debounced with jitter so hundreds of phones don't refetch in the same instant.
  */
-export function useLeaderboardLive(examId: string): boolean {
+export function useLeaderboardLive(examId: string, enabled: boolean): boolean {
   const queryClient = useQueryClient()
   const [connected, setConnected] = useState(false)
 
   useEffect(() => {
+    if (!enabled) return
     let timer: number | undefined
     const channel = supabase
       .channel(`leaderboard:${examId}`)
@@ -110,9 +132,10 @@ export function useLeaderboardLive(examId: string): boolean {
 
     return () => {
       window.clearTimeout(timer)
+      setConnected(false)
       void supabase.removeChannel(channel)
     }
-  }, [examId, queryClient])
+  }, [enabled, examId, queryClient])
 
   return connected
 }

@@ -69,7 +69,7 @@
     "resume": "Resume exam",
     "autoSubmitted": "Auto-submitted",
     "submittedAt": "Submitted {{time}}",
-    "answersAfterClose": "correct answers after the exam closes",
+    "resultsAfter": "Results after {{time}}",
     "rank": "Rank #{{rank}} of {{total}}",
     "viewResult": "View result",
     "leaderboard": "Leaderboard"
@@ -83,10 +83,12 @@
     "retake": "Retake",
     "viewLeaderboard": "View leaderboard",
     "review": "Your answers",
-    "answeredCount": "{{answered}} of {{total}} answered",
     "correctCount": "{{correct}} of {{total}} correct",
-    "revealAt": "Correct answers will be shown after the exam closes ({{time}}).",
-    "revealLater": "Correct answers will be shown after the exam closes.",
+    "submittedAt": "Submitted {{time}}",
+    "publishedAt": "Results will be published at {{time}}",
+    "publishedLater": "Results will be published when the exam closes",
+    "publishedIn": "in {{countdown}}",
+    "lockedHint": "Score, rank and correct answers appear here automatically when the exam closes for everyone.",
     "filterLabel": "Filter questions",
     "filter": {
       "all": "All",
@@ -111,7 +113,8 @@
     "you": "you",
     "empty": "No results yet.",
     "topN": "Top {{count}}",
-    "showingTop": "Showing the top {{shown}} of {{total}}"
+    "showingTop": "Showing the top {{shown}} of {{total}}",
+    "lockedHint": "The leaderboard opens automatically when the exam closes for everyone."
   },
   "state": {
     "startsIn": "Starts in {{countdown}} ({{time}})",

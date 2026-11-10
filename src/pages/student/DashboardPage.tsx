@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate } from 'react-router'
-import { CalendarClock, CheckCircle2, Clock, Radio, Trophy } from 'lucide-react'
+import { CalendarClock, CheckCircle2, Clock, Lock, Radio, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState, ErrorState, Loading } from '@/components/states'
@@ -129,6 +129,24 @@ function ScoreLine({ exam }: { exam: DashboardExam }) {
   const { t } = useTranslation()
   const a = exam.attempt
   if (!a?.submitted_at) return null
+
+  // Before the exam closes the server sends no score or rank at all.
+  if (!exam.released) {
+    return (
+      <div className="space-y-1 text-sm">
+        <p className="flex flex-wrap items-center gap-2">
+          <CheckCircle2 className="size-4 text-success" aria-hidden />
+          {t('dashboard.submittedAt', { time: formatEAT(a.submitted_at) })}
+          {a.auto_submitted && <Badge variant="secondary">{t('dashboard.autoSubmitted')}</Badge>}
+        </p>
+        <p className="flex items-center gap-2 text-muted-foreground">
+          <Lock className="size-4" aria-hidden />
+          {exam.results_at ? t('dashboard.resultsAfter', { time: formatEAT(exam.results_at) }) : t('result.publishedLater')}
+        </p>
+      </div>
+    )
+  }
+
   const pct = a.max_score ? Math.round(((a.score ?? 0) / a.max_score) * 100) : 0
   return (
     <div className="space-y-3">
@@ -145,7 +163,6 @@ function ScoreLine({ exam }: { exam: DashboardExam }) {
         {a.auto_submitted && <Badge variant="secondary">{t('dashboard.autoSubmitted')}</Badge>}
         <span className="w-full text-xs text-muted-foreground">
           {t('dashboard.submittedAt', { time: formatEAT(a.submitted_at) })}
-          {!exam.revealed && ` · ${t('dashboard.answersAfterClose')}`}
         </span>
       </div>
       <div className="flex gap-2">

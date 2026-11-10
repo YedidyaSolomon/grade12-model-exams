@@ -31,6 +31,7 @@ export function useServerNow(initialOffset: number, tickMs = 1000): number {
       }
     }
     document.addEventListener('visibilitychange', onVisible)
+    resync() // one cheap call so countdowns don't rely on a wrong phone clock
     return () => {
       cancelled = true
       window.clearInterval(tick)

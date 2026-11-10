@@ -158,10 +158,10 @@ select is(
       'question_id', public.admin_get_exam(current_setting('t.exam')::uuid) -> 'questions' -> 0 ->> 'id',
       'correct_option', 'C'))) ->> 'regraded',
   '1', 'fixing an answer key after attempts is allowed and re-grades');
+reset role;
 select is(
   (select score from public.attempts where id = '99999999-0000-0000-0000-000000000001'),
   2, 're-graded score reflects the corrected key (Q1 worth 2 points)');
-reset role;
 
 select * from finish();
 rollback;

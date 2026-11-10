@@ -92,9 +92,11 @@ select is(
   public.submit_exam((current_setting('t.p1')::jsonb ->> 'attempt_id')::uuid,
     '[{"question_id":"33000000-0000-0000-0000-000000000002","selected_option":"C"}]'::jsonb) ->> 'late',
   'false', 'student submits on time, flushing a final answer');
+reset role;  -- scores are not client-readable (see 05_results_hidden); check as owner
 select is(
   (select score from public.attempts where id = (current_setting('t.p1')::jsonb ->> 'attempt_id')::uuid),
   3, 'graded server-side: Q1 (2 pts) + Q2 (1 pt)');
+set local role authenticated;
 select is(
   public.submit_exam((current_setting('t.p1')::jsonb ->> 'attempt_id')::uuid) ->> 'already',
   'true', 'submitting twice is harmless (idempotent)');
@@ -149,10 +151,10 @@ select is(
   public.submit_exam(current_setting('t.a2')::uuid,
     '[{"question_id":"33000000-0000-0000-0000-000000000001","selected_option":"B"}]'::jsonb) ->> 'late',
   'true', 'late submit is rejected (closed as auto-submitted)');
+reset role;
 select is(
   (select score from public.attempts where id = current_setting('t.a2')::uuid), 0,
   'answers sent with a late submit are ignored');
-reset role;
 
 -- ---------------------------------------------------------------------------
 -- Retake grant: student 1 may take X a second time

@@ -46,15 +46,18 @@ export type DashboardExam = {
     deadline_at: string
     submitted_at: string | null
     auto_submitted: boolean
-    score: number | null
-    max_score: number | null
-    rank: number | null
-    total: number | null
+    /** score / rank fields are only present once results are released */
+    score?: number | null
+    max_score?: number | null
+    rank?: number | null
+    total?: number | null
   } | null
   has_retake: boolean
   reexam_pending: boolean
-  /** every window has ended: correct answers visible on the result page */
-  revealed: boolean
+  /** every window has ended: scores, ranks and answers are published */
+  released: boolean
+  /** when results are published (end of the last window) */
+  results_at: string | null
 }
 
 export type Dashboard = { server_now: string; banned: boolean; exams: DashboardExam[] }
