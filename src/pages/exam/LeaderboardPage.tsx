@@ -59,7 +59,7 @@ function LockedBoard({ lb }: { lb: Leaderboard }) {
   return (
     <>
       <div>
-        <h1 className="text-xl font-semibold">{t('leaderboard.title')}</h1>
+        <h1 className="text-xl font-extrabold text-primary">{t('leaderboard.title')}</h1>
         <p className="text-sm text-muted-foreground">{lb.title}</p>
       </div>
       <div className="flex flex-col items-center gap-2 rounded-xl border bg-card p-8 text-center" role="status">
@@ -84,7 +84,7 @@ function ReleasedBoard({ lb, live }: { lb: Extract<Leaderboard, { released: true
     <>
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h1 className="text-xl font-semibold">{t('leaderboard.title')}</h1>
+          <h1 className="text-xl font-extrabold text-primary">{t('leaderboard.title')}</h1>
           <p className="text-sm text-muted-foreground">{lb.title}</p>
         </div>
         <div className="text-right text-xs text-muted-foreground">
@@ -125,7 +125,7 @@ function ReleasedBoard({ lb, live }: { lb: Extract<Leaderboard, { released: true
 
 function Row({ row, pinned = false }: { row: LeaderboardRow; pinned?: boolean }) {
   const { t } = useTranslation()
-  const medal = row.rank <= 3 ? ['text-yellow-500', 'text-slate-400', 'text-amber-700'][row.rank - 1] : null
+  const medal = row.rank <= 3 ? ['text-gold', 'text-slate-400', 'text-orange-400'][row.rank - 1] : null
   return (
     <div
       className={cn(

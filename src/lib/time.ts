@@ -18,6 +18,13 @@ const timeFmt = new Intl.DateTimeFormat('en-GB', {
   hour12: false,
 })
 
+const hourFmt = new Intl.DateTimeFormat('en-GB', { timeZone: EAT_TIME_ZONE, hour: 'numeric', hourCycle: 'h23' })
+
+/** Hour of day (0–23) in EAT. Pass SERVER time (useServerClock), never Date.now(). */
+export function eatHour(ms: number): number {
+  return Number(hourFmt.format(new Date(ms)))
+}
+
 export function formatEAT(value: string | Date): string {
   return `${dateTimeFmt.format(new Date(value))} EAT`
 }
@@ -61,4 +68,12 @@ export function formatDuration(ms: number): string {
   const mm = String(m).padStart(2, '0')
   const ss = String(s).padStart(2, '0')
   return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
+}
+
+/** Clock difference for people: "11 h 0 min" / "3 min" (rounded to the minute). */
+export function formatSkew(ms: number): string {
+  const totalMin = Math.round(Math.abs(ms) / 60_000)
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  return h > 0 ? `${h} h ${m} min` : `${m} min`
 }

@@ -4,7 +4,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(67);
+select plan(69);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures (as postgres)
@@ -208,7 +208,9 @@ select results_eq(
   $$ values ('pending', false) $$, 'dashboard shows the pending request');
 
 select set_config('request.jwt.claims', '{"sub":"60000000-0000-0000-0000-000000000004","role":"authenticated"}', true);
-select set_config('t.req4', public.request_reexam('61000000-0000-0000-0000-000000000001', 'Network was down') ->> 'id', true);
+select set_config('t.req4', public.request_reexam('61000000-0000-0000-0000-000000000001', 'Network was down', 'network_power') ->> 'id', true);
+select is((select reason_category::text from public.reexam_requests where id = current_setting('t.req4')::uuid), 'network_power',
+  'request stores the reason category; the student can read it on their own request');
 select set_config('request.jwt.claims', '{"sub":"60000000-0000-0000-0000-000000000005","role":"authenticated"}', true);
 select set_config('t.req5', public.request_reexam('61000000-0000-0000-0000-000000000001', 'Forgot the date') ->> 'id', true);
 select is((select count(*)::int from public.reexam_requests), 1, 'a student sees only their own requests');
@@ -217,6 +219,10 @@ select is((select count(*)::int from public.reexam_requests), 1, 'a student sees
 select set_config('request.jwt.claims', '{"sub":"60000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
 select throws_ok($$ select public.admin_create_reexam('61000000-0000-0000-0000-000000000002') $$,
   '55000', null, 'no re-exam for an exam that is not released');
+select results_eq(
+  $$ select r ->> 'reason_category' from jsonb_array_elements(public.admin_list_reexam_requests()) r
+     where r ->> 'id' in (current_setting('t.req3'), current_setting('t.req4')) order by r ->> 'reason' $$,
+  $$ values ('other'), ('network_power') $$, 'admin list shows the category (default other)');
 select set_config('t.rev3', public.admin_review_reexam_request(current_setting('t.req3')::uuid, true, 'OK')::text, true);
 select is((current_setting('t.rev3')::jsonb ->> 'created_reexam')::boolean, true, 'first approval creates a re-exam');
 select set_config('t.rx', current_setting('t.rev3')::jsonb ->> 'reexam_id', true);

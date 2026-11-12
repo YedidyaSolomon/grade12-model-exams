@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { ErrorState, Loading } from '@/components/states'
 import { useAuth } from './AuthProvider'
@@ -48,4 +49,11 @@ export function RedirectIfSignedIn() {
   if (initializing) return <Loading fullScreen />
   if (session) return <Navigate to="/" replace />
   return <Outlet />
+}
+
+/** For "/": logged-out visitors get the public landing page, everyone else the app. */
+export function PublicHomeOrApp({ publicPage }: { publicPage: ReactNode }) {
+  const { session, initializing } = useAuth()
+  if (initializing) return <Loading fullScreen />
+  return session ? <Outlet /> : publicPage
 }

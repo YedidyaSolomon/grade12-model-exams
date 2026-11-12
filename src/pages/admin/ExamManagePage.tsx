@@ -77,7 +77,7 @@ function Header({ c }: { c: ExamControl }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold">
+        <h1 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold text-primary">
           {c.title}
           <StatusBadge status={c.status} />
           {c.reexam_of && <Badge variant="secondary">{t('reexam.badge')}</Badge>}

@@ -91,6 +91,11 @@ Development runs against the cloud dev project (no Docker). See README.md for se
 - Confirm every destructive action (`useConfirm`).
 - Route guards in `src/auth/guards.tsx` are UX only.
 
+## Git
+
+- Commit messages and PR descriptions carry no AI attribution: no `Co-Authored-By: Claude`
+  trailer, no "Generated with Claude Code" line, no session link.
+
 ## Commands
 
 `npm run dev` · `npm run typecheck` · `npm run build` · `npm run db:push` ·

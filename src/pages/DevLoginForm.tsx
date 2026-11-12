@@ -33,7 +33,7 @@ export default function DevLoginForm() {
   return (
     <form
       onSubmit={(e) => void onSubmit(e)}
-      className="space-y-3 rounded-xl border-2 border-dashed border-warning bg-warning/5 p-4"
+      className="space-y-3 rounded-xl border-2 border-dashed border-warning bg-warning/5 p-5"
     >
       <div>
         <p className="text-sm font-semibold">{t('login.devTitle')}</p>
@@ -66,7 +66,7 @@ export default function DevLoginForm() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <Button type="submit" variant="outline" className="w-full" disabled={pending}>
+      <Button type="submit" variant="press-outline" className="w-full" disabled={pending}>
         {t('login.devSubmit')}
       </Button>
     </form>

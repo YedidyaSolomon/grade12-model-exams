@@ -112,7 +112,7 @@ function Detail({ s }: { s: StudentDetail }) {
       {promptDialog}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">{s.full_name ?? t('students.noName')}</h1>
+          <h1 className="text-2xl font-extrabold text-primary">{s.full_name ?? t('students.noName')}</h1>
           <p className="text-sm text-muted-foreground">
             {s.email ?? (s.telegram_username ? `@${s.telegram_username}` : '')} · {t('students.joined', { time: formatEAT(s.created_at) })}
             {s.last_sign_in_at && <> · {t('students.lastSignIn', { time: formatEAT(s.last_sign_in_at) })}</>}

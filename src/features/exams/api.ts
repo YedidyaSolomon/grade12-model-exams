@@ -157,6 +157,42 @@ export function useDeleteExam() {
 }
 
 // ---------------------------------------------------------------------------
+// Original import files (private exam-sources bucket, admin-only via storage RLS).
+// The path is stored in exams.source_file when the exam is saved.
+// ---------------------------------------------------------------------------
+export async function uploadExamSource(file: File, contentType: string): Promise<string> {
+  // Storage keys must be ASCII-safe; the random folder keeps names unique.
+  const safe =
+    file.name
+      .normalize('NFKD')
+      .replace(/[^\w.-]+/g, '_')
+      .replace(/_+/g, '_')
+      .slice(-100) || 'questions'
+  const path = `${crypto.randomUUID()}/${safe}`
+  const { error } = await supabase.storage.from('exam-sources').upload(path, file, { contentType, upsert: false })
+  if (error) throw error
+  return path
+}
+
+/** Older drafts stored just the file name; only real storage paths can be downloaded. */
+export function isStoredSource(sourceFile: string | null): sourceFile is string {
+  return !!sourceFile && sourceFile.includes('/')
+}
+
+export function sourceFileName(sourceFile: string): string {
+  return sourceFile.split('/').pop() || sourceFile
+}
+
+/** A one-minute download link for the original file (the bucket is private). */
+export async function examSourceDownloadUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('exam-sources')
+    .createSignedUrl(path, 60, { download: sourceFileName(path) })
+  if (error) throw error
+  return data.signedUrl
+}
+
+// ---------------------------------------------------------------------------
 // Question images (public bucket, admin-only write via storage RLS)
 // ---------------------------------------------------------------------------
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024

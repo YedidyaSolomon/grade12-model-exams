@@ -165,6 +165,7 @@ begin
   if p_role is not null and p_user_id = auth.uid() and p_role <> 'admin' then
     raise exception 'You cannot remove your own admin role' using errcode = '42501';
   end if;
+  
 
   update public.profiles
      set full_name = coalesce(nullif(btrim(p_full_name), ''), full_name),

@@ -26,6 +26,7 @@ export const adminKeys = {
   control: (id: string) => ['admin', 'control', id] as const,
   results: (id: string) => ['admin', 'results', id] as const,
   requests: (s: ReexamStatus | 'all') => ['admin', 'requests', s] as const,
+  pendingCount: ['admin', 'pending-count'] as const,
 }
 
 async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
@@ -234,6 +235,25 @@ export function useReexamRequests(status: ReexamStatus | 'all') {
     queryKey: adminKeys.requests(status),
     queryFn: () =>
       rpc<ReexamRequest[]>('admin_list_reexam_requests', { p_status: status === 'all' ? null : status }),
+  })
+}
+
+/**
+ * Pending re-exam requests, for the sidebar badge. A count-only read (RLS lets admins read
+ * every request). Polled every 30 s and refreshed after any admin change.
+ */
+export function usePendingRequestCount() {
+  return useQuery({
+    queryKey: adminKeys.pendingCount,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('reexam_requests')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending')
+      if (error) throw error
+      return count ?? 0
+    },
+    refetchInterval: 30_000,
   })
 }
 

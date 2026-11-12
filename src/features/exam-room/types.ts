@@ -95,3 +95,7 @@ export const STUDENT_ERROR_CODES = [
   'invalid_reason',
 ] as const
 export type StudentErrorCode = (typeof STUDENT_ERROR_CODES)[number]
+
+/** Reason categories for a re-exam request (enum public.reexam_reason). */
+export const REEXAM_REASONS = ['network_power', 'illness', 'device', 'other'] as const satisfies readonly Enums<'reexam_reason'>[]
+export type ReexamReason = (typeof REEXAM_REASONS)[number]

@@ -1,14 +1,27 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate, useParams } from 'react-router'
-import { ArrowLeft, FileUp, ListOrdered, Lock, PenLine } from 'lucide-react'
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock3,
+  FileUp,
+  ListChecks,
+  ListOrdered,
+  Lock,
+  PenLine,
+  Plus,
+  Save,
+  Send,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs } from '@/components/ui/tabs'
 import { ErrorState, Loading } from '@/components/states'
 import { useConfirm } from '@/components/ConfirmDialog'
 import { errorMessage, rpcProblems } from '@/lib/errors'
-import { formatDuration, formatEAT, eatInputToIso } from '@/lib/time'
+import { formatEAT, formatSkew, eatInputToIso } from '@/lib/time'
 import { useServerClock } from '@/features/exam-room/useServerClock'
 import {
   adminExamToDraft,
@@ -23,7 +36,9 @@ import { emptyDraft, type AdminExam, type DraftQuestion, type ExamDraft, type Op
 import { ExamDetailsForm } from '@/features/exams/components/ExamDetailsForm'
 import { QuestionForm } from '@/features/exams/components/QuestionForm'
 import { PreviewTable } from '@/features/exams/components/PreviewTable'
+import { UploadQuestions } from '@/features/exams/components/UploadQuestions'
 import { StatusBadge } from '@/features/exams/components/StatusBadge'
+import { cn } from '@/lib/utils'
 
 const LOCAL_DRAFT_KEY = 'admin:exam-draft:new'
 
@@ -78,7 +93,8 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
   const [showRestored, setShowRestored] = useState(!!restoredLocal)
   const [dirty, setDirty] = useState(false)
   const [editingKey, setEditingKey] = useState<string | null>(null)
-  const [tab, setTab] = useState<'manual' | 'upload'>('manual')
+  // New, empty exam: start on Import (as in the design); otherwise on the manual editor.
+  const [tab, setTab] = useState<'manual' | 'upload'>(() => (draft.questions.length === 0 ? 'upload' : 'manual'))
   // Notices survive the remount that follows a save (fresh server copy) via router state.
   const [notice, setNotice] = useState<string | null>(
     () => (location.state as { notice?: string } | null)?.notice ?? null,
@@ -100,7 +116,6 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
   // the admin is editing is noticed, and a wrong device clock can't block or allow publishing.
   const clock = useServerClock(0, 15_000)
   const report = useMemo(() => analyzeDraft(draft, clock.now), [draft, clock.now])
-  const clockSkewMin = Math.round(clock.offset / 60_000)
   const canPublish = report.publishable && clock.synced
   const editing = draft.questions.find((q) => q.key === editingKey) ?? null
   const nextNumber = draft.questions.reduce((m, q) => Math.max(m, q.number), 0) + 1
@@ -139,6 +154,29 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
   }
 
   // ---- question operations -------------------------------------------------
+  /** From the Import tab. Append keeps the file's own numbering (so its gaps still get
+   *  flagged), shifted to start after the current last question. `sourcePath` is where
+   *  the original file was stored (null if that upload failed: keep the previous link). */
+  function importQuestions(
+    imported: DraftQuestion[],
+    mode: 'replace' | 'append',
+    fileName: string,
+    sourcePath: string | null,
+  ) {
+    setDraft((d) => {
+      let questions = imported
+      if (mode === 'append' && d.questions.length > 0) {
+        const start = d.questions.reduce((m, q) => Math.max(m, q.number), 0) + 1
+        const first = Math.min(...imported.map((q) => q.number))
+        questions = [...d.questions, ...imported.map((q) => ({ ...q, number: q.number - first + start }))]
+      }
+      return { ...d, questions, sourceFile: sourcePath ?? d.sourceFile }
+    })
+    setDirty(true)
+    setEditingKey(null)
+    setNotice(t('exams.upload.imported', { count: imported.length, file: fileName }))
+  }
+
   function upsertQuestion(q: DraftQuestion) {
     if (editingKey) {
       setQuestions((qs) => qs.map((x) => (x.key === editingKey ? q : x)))
@@ -293,25 +331,69 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
   const blockingProblems: Problem[] = [...report.exam, ...report.list]
 
   // ---- render ----------------------------------------------------------------
+  const actions = (
+    <div className="flex flex-wrap items-center gap-2">
+      {exam && (
+        <Button asChild variant="ghost" size="sm" className="text-primary">
+          <Link to={`/admin/exams/${exam.id}/manage`}>{t('exams.actions.manage')}</Link>
+        </Button>
+      )}
+      {exam && !answersOnly && (
+        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => void deleteExam()} disabled={activeMutation}>
+          <Trash2 aria-hidden /> {t('exams.actions.delete')}
+        </Button>
+      )}
+      {answersOnly ? (
+        <Button onClick={() => void saveKeys()} disabled={!keysChanged || activeMutation}>
+          {t('exams.actions.saveKeys')}
+        </Button>
+      ) : isPublished ? (
+        <>
+          <Button variant="outline" onClick={() => void unpublish()} disabled={activeMutation}>
+            {t('exams.actions.unpublish')}
+          </Button>
+          <Button onClick={() => void save(true)} disabled={!canPublish || activeMutation}>
+            <Send aria-hidden /> {t('exams.actions.saveChanges')}
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button variant="outline" onClick={() => void save(false)} disabled={!report.savable || activeMutation}>
+            <Save aria-hidden /> {t('exams.actions.saveDraft')}
+          </Button>
+          <Button onClick={() => void save(true)} disabled={!canPublish || activeMutation}>
+            <Send aria-hidden /> {t('exams.actions.publish')}
+          </Button>
+        </>
+      )}
+    </div>
+  )
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6 pb-24">
+    <div className="mx-auto max-w-6xl space-y-5 pb-28">
       {confirmDialog}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button asChild variant="ghost" size="icon" aria-label={t('common.back')}>
+      {/* Header: stays in view so Save / Publish are always reachable. */}
+      <header className="sticky top-0 z-10 -mx-1 flex flex-wrap items-center gap-3 border-b bg-background px-1 py-3">
+        <Button asChild variant="outline" size="icon" className="size-9" aria-label={t('common.back')}>
           <Link to="/admin/exams">
             <ArrowLeft />
           </Link>
         </Button>
-        <h1 className="text-2xl font-semibold">{isNew ? t('exams.createTitle') : t('exams.editTitle')}</h1>
-        {exam && <StatusBadge status={exam.status} />}
-        {dirty && <span className="text-xs text-muted-foreground">{t('exams.unsaved')}</span>}
-        {exam && (
-          <Button asChild variant="outline" size="sm" className="ml-auto">
-            <Link to={`/admin/exams/${exam.id}/manage`}>{t('exams.actions.manage')}</Link>
-          </Button>
-        )}
-      </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-extrabold text-primary sm:text-2xl">
+              {isNew ? t('exams.createTitle') : t('exams.editTitle')}
+            </h1>
+            <StatusBadge status={exam?.status ?? 'draft'} />
+            {dirty && <span className="text-xs font-semibold text-warning">{t('exams.unsaved')}</span>}
+          </div>
+          <p className="text-sm text-muted-foreground">{t('exams.editorSubtitle')}</p>
+        </div>
+        {actions}
+      </header>
+
+      <ServerTimeBanner synced={clock.synced} now={clock.now} offset={clock.offset} />
 
       {exam?.reexam_of && (
         <Alert variant={exam.reexam_student_count === 0 ? 'warning' : 'default'}>
@@ -343,100 +425,136 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
           <AlertDescription>{t('exams.locked.body')}</AlertDescription>
         </Alert>
       )}
-      {clock.synced && Math.abs(clockSkewMin) >= 2 && (
-        <Alert variant="warning">
-          <AlertDescription>
-            {t(clockSkewMin < 0 ? 'exams.clockAhead' : 'exams.clockBehind', {
-              time: formatDuration(Math.abs(clock.offset)),
-              server: formatEAT(new Date(clock.now)),
-            })}
-          </AlertDescription>
-        </Alert>
-      )}
       {exam?.status === 'live' && !answersOnly && (
         <Alert variant="warning">
           <AlertDescription>{t('exams.liveEditWarning')}</AlertDescription>
         </Alert>
       )}
 
-      <section aria-labelledby="details-h" className="space-y-3">
-        <h2 id="details-h" className="text-lg font-semibold">{t('exams.detailsHeading')}</h2>
+      <SectionCard
+        n={1}
+        id="details-h"
+        title={t('exams.section1.title')}
+        subtitle={t('exams.section1.subtitle')}
+        aside={<Chip>{t('exams.required')}</Chip>}
+      >
         <ExamDetailsForm draft={draft} onChange={change} disabled={answersOnly} />
-      </section>
+      </SectionCard>
 
-      <section aria-labelledby="questions-h" className="space-y-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 id="questions-h" className="text-lg font-semibold">
-            {t('exams.questionsHeading')}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {t('exams.summary', { count: draft.questions.length, points: totalPoints })}
-          </p>
-        </div>
+      <SectionCard
+        n={2}
+        id="questions-h"
+        title={t('exams.section2.title')}
+        subtitle={t('exams.section2.subtitle')}
+        aside={
+          <div className="flex flex-wrap gap-1.5">
+            <Chip tone="primary">
+              <ListChecks className="size-3.5" aria-hidden /> {t('exams.questionCount', { count: draft.questions.length })}
+            </Chip>
+            <Chip>{t('exams.pointsTotal', { count: totalPoints })}</Chip>
+          </div>
+        }
+      >
+        <div className="space-y-5">
+          {!answersOnly && (
+            <Tabs
+              variant="underline"
+              label={t('exams.section2.title')}
+              value={tab}
+              onChange={setTab}
+              tabs={[
+                {
+                  value: 'upload',
+                  label: (
+                    <span className="flex items-center gap-1.5">
+                      <FileUp className="size-4" aria-hidden />
+                      {t('exams.tabs.upload')}
+                    </span>
+                  ),
+                },
+                {
+                  value: 'manual',
+                  label: (
+                    <span className="flex items-center gap-1.5">
+                      <PenLine className="size-4" aria-hidden />
+                      {t('exams.tabs.manual')}
+                    </span>
+                  ),
+                },
+              ]}
+            >
+              {tab === 'manual' ? (
+                <QuestionForm
+                  editing={editing}
+                  nextNumber={nextNumber}
+                  onSubmit={upsertQuestion}
+                  onCancelEdit={() => setEditingKey(null)}
+                />
+              ) : (
+                <UploadQuestions
+                  existingCount={draft.questions.length}
+                  sourceFile={draft.sourceFile}
+                  onImport={importQuestions}
+                />
+              )}
+            </Tabs>
+          )}
 
-        {!answersOnly && (
-          <Tabs
-            label={t('exams.questionsHeading')}
-            value={tab}
-            onChange={setTab}
-            tabs={[
-              { value: 'manual', label: <span className="flex items-center gap-1.5"><PenLine className="size-4" aria-hidden />{t('exams.tabs.manual')}</span> },
-              { value: 'upload', label: <span className="flex items-center gap-1.5"><FileUp className="size-4" aria-hidden />{t('exams.tabs.upload')}</span> },
-            ]}
-          >
-            {tab === 'manual' ? (
-              <QuestionForm
-                editing={editing}
-                nextNumber={nextNumber}
-                onSubmit={upsertQuestion}
-                onCancelEdit={() => setEditingKey(null)}
-              />
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-xs font-bold tracking-[0.08em] text-muted-foreground uppercase">
+                {t('exams.previewHeading', { count: draft.questions.length })}
+              </h3>
+              {!answersOnly && tab === 'upload' && (
+                <button
+                  type="button"
+                  onClick={() => setTab('manual')}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                >
+                  <Plus className="size-3.5" aria-hidden /> {t('exams.addManually')}
+                </button>
+              )}
+            </div>
+            {draft.questions.length > 0 ? (
+              <>
+                {report.list.length > 0 && !answersOnly && (
+                  <Alert variant="destructive">
+                    <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+                      <span>{report.list.map((p) => t(p.key, p.values ?? {})).join(' · ')}</span>
+                      <Button size="sm" variant="outline" onClick={() => setQuestions(renumber)}>
+                        <ListOrdered aria-hidden /> {t('exams.actions.renumber')}
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <PreviewTable
+                  questions={draft.questions}
+                  problems={report.byQuestion}
+                  editingKey={editingKey}
+                  answersOnly={answersOnly}
+                  onEdit={(key) => {
+                    setTab('manual')
+                    setEditingKey(key)
+                    document.getElementById('questions-h')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }}
+                  onDelete={(key) => void deleteQuestion(key)}
+                  onMove={moveQuestion}
+                  onChangeCorrect={changeCorrect}
+                />
+              </>
             ) : (
-              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-                {t('exams.tabs.uploadSoon')}
-              </div>
+              <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+                {t('exams.noQuestionsYet')}
+              </p>
             )}
-          </Tabs>
-        )}
+          </div>
+        </div>
+      </SectionCard>
 
-        {draft.questions.length > 0 ? (
-          <>
-            {report.list.length > 0 && !answersOnly && (
-              <Alert variant="destructive">
-                <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
-                  <span>{report.list.map((p) => t(p.key, p.values ?? {})).join(' · ')}</span>
-                  <Button size="sm" variant="outline" onClick={() => setQuestions(renumber)}>
-                    <ListOrdered aria-hidden /> {t('exams.actions.renumber')}
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            )}
-            <PreviewTable
-              questions={draft.questions}
-              problems={report.byQuestion}
-              editingKey={editingKey}
-              answersOnly={answersOnly}
-              onEdit={(key) => {
-                setTab('manual')
-                setEditingKey(key)
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-              }}
-              onDelete={(key) => void deleteQuestion(key)}
-              onMove={moveQuestion}
-              onChangeCorrect={changeCorrect}
-            />
-          </>
-        ) : (
-          <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-            {t('exams.noQuestionsYet')}
-          </p>
-        )}
-      </section>
-
-      {/* Sticky action bar */}
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-card/95 backdrop-blur md:left-56">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <div className="min-w-0 flex-1 text-sm" aria-live="polite">
+      {/* Validation bar: why Publish is disabled, save notices and server errors. */}
+      <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-card md:left-60">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 md:px-6 lg:px-8" aria-live="polite">
+          <div className="min-w-0 flex-1 text-sm">
             {lastError ? (
               <div className="text-destructive">
                 <p className="font-medium">{serverProblems.length ? t('exams.serverRejected') : errorMessage(lastError)}</p>
@@ -446,7 +564,9 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
               // A notice never hides why Publish is disabled: both are shown.
               <>
                 {notice && <p className="text-success">{notice}</p>}
-                {answersOnly ? null : !report.publishable ? (
+                {answersOnly ? (
+                  !notice && <p className="text-muted-foreground">{t('exams.locked.bar')}</p>
+                ) : !report.publishable ? (
                   <ProblemSummary
                     exam={blockingProblems.map((p) => t(p.key, p.values ?? {}))}
                     questionCount={report.byQuestion.size}
@@ -454,45 +574,117 @@ function ExamEditor({ exam }: { exam?: AdminExam }) {
                 ) : !clock.synced ? (
                   <p className="text-muted-foreground">{t('exams.checkingServerTime')}</p>
                 ) : (
-                  !notice && <p className="text-success">{t('exams.readyToPublish')}</p>
+                  !notice && (
+                    <p className="flex items-center gap-1.5 font-semibold text-success">
+                      <CheckCircle2 className="size-4" aria-hidden /> {t('exams.readyToPublish')}
+                    </p>
+                  )
                 )}
-              </>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {exam && !answersOnly && (
-              <Button variant="ghost" className="text-destructive" onClick={() => void deleteExam()} disabled={activeMutation}>
-                {t('exams.actions.delete')}
-              </Button>
-            )}
-            {answersOnly ? (
-              <Button onClick={() => void saveKeys()} disabled={!keysChanged || activeMutation}>
-                {t('exams.actions.saveKeys')}
-              </Button>
-            ) : isPublished ? (
-              <>
-                <Button variant="outline" onClick={() => void unpublish()} disabled={activeMutation}>
-                  {t('exams.actions.unpublish')}
-                </Button>
-                <Button onClick={() => void save(true)} disabled={!canPublish || activeMutation}>
-                  {t('exams.actions.saveChanges')}
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="outline" onClick={() => void save(false)} disabled={!report.savable || activeMutation}>
-                  {t('exams.actions.saveDraft')}
-                </Button>
-                <Button onClick={() => void save(true)} disabled={!canPublish || activeMutation}>
-                  {t('exams.actions.publish')}
-                </Button>
               </>
             )}
           </div>
         </div>
       </div>
     </div>
+  )
+}
+
+/** Live server time + how far this computer's clock is off (warn at 2+ minutes). */
+function ServerTimeBanner({ synced, now, offset }: { synced: boolean; now: number; offset: number }) {
+  const { t } = useTranslation()
+  const skewMin = Math.round(offset / 60_000)
+  const off = synced && Math.abs(skewMin) >= 2
+  return (
+    <div
+      className={cn(
+        'flex flex-wrap items-start gap-3 rounded-xl border p-4',
+        off ? 'border-warning/40 bg-gold-soft' : 'border-border bg-card card-shadow',
+      )}
+      role={off ? 'alert' : undefined}
+    >
+      <span
+        aria-hidden
+        className={cn('grid size-9 shrink-0 place-items-center rounded-lg', off ? 'bg-warning/15 text-warning' : 'bg-primary-soft text-primary')}
+      >
+        <Clock3 className="size-5" />
+      </span>
+      <div className="min-w-0 flex-1 text-sm">
+        <p className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase">{t('exams.server.label')}</span>
+          <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-xs font-bold text-primary">
+            {synced ? formatEAT(new Date(now)) : t('exams.checkingServerTime')}
+          </span>
+        </p>
+        <p className={cn('mt-1', off ? 'text-gold-foreground' : 'text-muted-foreground')}>
+          {off
+            ? t(skewMin < 0 ? 'exams.clockAhead' : 'exams.clockBehind', {
+                time: formatSkew(Math.abs(offset)),
+                server: formatEAT(new Date(now)),
+              })
+            : t('exams.server.body')}
+        </p>
+      </div>
+      {synced && (
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold',
+            off ? 'bg-warning/15 text-warning' : 'bg-success/15 text-success',
+          )}
+        >
+          <span aria-hidden className="size-1.5 rounded-full bg-current" />
+          {off ? t('exams.server.off', { time: formatSkew(Math.abs(offset)) }) : t('exams.server.inSync')}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function SectionCard({
+  n,
+  id,
+  title,
+  subtitle,
+  aside,
+  children,
+}: {
+  n: number
+  id: string
+  title: string
+  subtitle: string
+  aside?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <section aria-labelledby={id} className="rounded-xl border bg-card card-shadow">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b p-4 sm:px-5">
+        <div className="flex min-w-0 gap-3">
+          <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary-soft text-sm font-extrabold text-primary">
+            {n}
+          </span>
+          <div className="min-w-0">
+            <h2 id={id} className="scroll-mt-24 text-base font-extrabold text-primary">
+              {title}
+            </h2>
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
+          </div>
+        </div>
+        {aside}
+      </div>
+      <div className="p-4 sm:p-5">{children}</div>
+    </section>
+  )
+}
+
+function Chip({ children, tone = 'muted' }: { children: ReactNode; tone?: 'muted' | 'primary' }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-bold',
+        tone === 'primary' ? 'bg-primary-soft text-primary' : 'bg-muted text-muted-foreground',
+      )}
+    >
+      {children}
+    </span>
   )
 }
 

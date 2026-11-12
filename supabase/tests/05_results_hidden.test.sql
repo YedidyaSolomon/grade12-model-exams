@@ -4,7 +4,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(21);
+select plan(28);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures: exam with an OPEN window; two students submitted and graded.
@@ -16,6 +16,7 @@ insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data) values
   ('50000000-0000-0000-0000-00000000000a', 'ha@t.local', '{"provider":"email"}', '{"full_name":"Admin H"}');
 update public.profiles set school = 'School H', stream = 'natural' where id::text like '50000000-%';
 update public.profiles set role = 'admin' where id = '50000000-0000-0000-0000-00000000000a';
+update public.profiles set telegram_username = 'hidden_one_tg' where id = '50000000-0000-0000-0000-000000000001';
 
 insert into public.exams (id, title, subject, stream, duration_minutes, published_at) values
   ('51000000-0000-0000-0000-000000000001', 'H exam', 'Math', 'both', 60, now());
@@ -99,6 +100,21 @@ select ok(
   'Realtime pings carry no score data');
 
 -- ---------------------------------------------------------------------------
+-- Public landing page (anon): no podium for an open exam, never any identity
+-- ---------------------------------------------------------------------------
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+select lives_ok($$ select public.public_home() $$, 'public_home: callable by logged-out visitors');
+select set_config('t.ph', public.public_home()::text, true);
+select ok((current_setting('t.ph')::jsonb #>> '{podium,exam_id}') is distinct from '51000000-0000-0000-0000-000000000001',
+  'public_home: NO podium for an exam that is still open');
+select ok(position('Hidden' in current_setting('t.ph')) = 0 and position('School H' in current_setting('t.ph')) = 0
+          and position('hidden_one_tg' in current_setting('t.ph')) = 0
+          and position('50000000-' in current_setting('t.ph')) = 0,
+  'public_home: no names, schools, Telegram usernames or user ids before close');
+reset role;
+
+-- ---------------------------------------------------------------------------
 -- Admins see everything at any time
 -- ---------------------------------------------------------------------------
 set local role authenticated;
@@ -123,6 +139,26 @@ select results_eq(
   $$ values (true, 1, 1) $$,
   'after the last window ends the student sees score and rank');
 reset role;
+
+-- Released: the public podium shows first name + last initial only.
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+select set_config('t.ph', public.public_home()::text, true);
+select results_eq(
+  $$ select current_setting('t.ph')::jsonb #>> '{podium,exam_id}', r ->> 'name', (r ->> 'rank')::int, (r ->> 'score')::int
+     from jsonb_array_elements(current_setting('t.ph')::jsonb #> '{podium,rows}') r order by 3 $$,
+  $$ values ('51000000-0000-0000-0000-000000000001', 'Hidden O.', 1, 1),
+            ('51000000-0000-0000-0000-000000000001', 'Hidden T.', 2, 0) $$,
+  'public_home: podium of the latest released exam, short names only');
+select ok(position('Hidden One' in current_setting('t.ph')) = 0 and position('Hidden Two' in current_setting('t.ph')) = 0
+          and position('School H' in current_setting('t.ph')) = 0
+          and position('hidden_one_tg' in current_setting('t.ph')) = 0
+          and position('50000000-' in current_setting('t.ph')) = 0,
+  'public_home: no full names, schools, Telegram usernames or user ids after release');
+select throws_ok($$ select public.get_leaderboard('51000000-0000-0000-0000-000000000001') $$, 'P0001', 'not_authenticated',
+  'anon CANNOT read the full leaderboard');
+reset role;
+select is(private.short_name('  Abebe   Kebede Tesfaye '), 'Abebe K.', 'short_name: first name + last initial');
 
 select * from finish();
 rollback;

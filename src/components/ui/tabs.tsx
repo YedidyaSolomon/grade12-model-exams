@@ -10,12 +10,15 @@ export function Tabs<T extends string>({
   onChange,
   children,
   label,
+  variant = 'pill',
 }: {
   tabs: Tab<T>[]
   value: T
   onChange: (v: T) => void
   children: ReactNode
   label: string
+  /** pill: segmented control. underline: tab strip with a bottom border (admin sections). */
+  variant?: 'pill' | 'underline'
 }) {
   const id = useId()
   const refs = useRef<(HTMLButtonElement | null)[]>([])
@@ -37,7 +40,11 @@ export function Tabs<T extends string>({
 
   return (
     <div>
-      <div role="tablist" aria-label={label} className="inline-flex rounded-lg bg-muted p-1">
+      <div
+        role="tablist"
+        aria-label={label}
+        className={variant === 'pill' ? 'inline-flex rounded-lg bg-muted p-1' : 'flex gap-1 overflow-x-auto overflow-y-hidden border-b'}
+      >
         {tabs.map((tab, i) => {
           const selected = tab.value === value
           return (
@@ -55,8 +62,13 @@ export function Tabs<T extends string>({
               onClick={() => onChange(tab.value)}
               onKeyDown={(e) => onKeyDown(e, i)}
               className={cn(
-                'rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                selected ? 'bg-card shadow-sm' : 'text-muted-foreground hover:text-foreground',
+                'text-sm font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                variant === 'pill'
+                  ? cn('rounded-md px-3 py-1.5', selected ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground')
+                  : cn(
+                      '-mb-px border-b-2 px-3 py-2.5',
+                      selected ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary',
+                    ),
               )}
             >
               {tab.label}

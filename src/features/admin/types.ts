@@ -1,3 +1,4 @@
+import type { ReexamReason } from '@/features/exam-room/types'
 import type { Enums } from '@/lib/supabase'
 
 export type Stream = Enums<'stream_type'>
@@ -201,6 +202,7 @@ export type ReexamRequest = {
   stream: Stream | null
   is_banned: boolean
   reason: string
+  reason_category: ReexamReason
   status: ReexamStatus
   admin_note: string | null
   created_at: string

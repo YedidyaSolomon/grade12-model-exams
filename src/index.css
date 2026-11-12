@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
-/* shadcn/ui design tokens (new-york, slate). Dark mode can be added later via .dark. */
+/*
+ * Navy theme (from the Stitch landing page design), used on every screen.
+ * Contrast (WCAG AA, checked): ink on background 16:1, muted text on white 6.2:1 and on
+ * muted 5.5:1, white on primary 13:1, white on telegram 6.0:1, live on live-soft 6.1:1,
+ * gold-foreground on gold-soft 8.9:1, success 5.3:1, warning 5.0:1.
+ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -8,6 +13,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -21,33 +27,52 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-telegram: var(--telegram);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-live: var(--live);
+  --color-live-soft: var(--live-soft);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-active: var(--sidebar-active);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: "Plus Jakarta Sans Variable", "Noto Sans Ethiopic Variable", system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(0.985 0.002 247);
-  --foreground: oklch(0.21 0.034 265);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.034 265);
-  --primary: oklch(0.45 0.13 255);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.96 0.007 247);
-  --secondary-foreground: oklch(0.21 0.034 265);
-  --muted: oklch(0.96 0.007 247);
-  --muted-foreground: oklch(0.5 0.03 257);
-  --accent: oklch(0.95 0.02 250);
-  --accent-foreground: oklch(0.21 0.034 265);
-  --destructive: oklch(0.55 0.22 27);
-  --destructive-foreground: oklch(0.985 0 0);
-  --success: oklch(0.55 0.14 150);
-  --warning: oklch(0.72 0.16 70);
-  --border: oklch(0.91 0.01 256);
-  --input: oklch(0.91 0.01 256);
-  --ring: oklch(0.45 0.13 255);
+  --radius: 0.75rem;
+  --background: #f4f7fc;          /* pale blue-grey page */
+  --foreground: #0f1b3d;          /* ink */
+  --card: #ffffff;
+  --card-foreground: #0f1b3d;
+  --primary: #0b2a6f;             /* navy */
+  --primary-foreground: #ffffff;
+  --primary-soft: #e7eefb;        /* pills, chips, selected rows */
+  --secondary: #eef2f9;
+  --secondary-foreground: #0f1b3d;
+  --muted: #eef2f9;
+  --muted-foreground: #4f5b78;
+  --accent: #e7eefb;
+  --accent-foreground: #0b2a6f;
+  --telegram: #0e6497;            /* sign-in button */
+  --gold: #e9a215;                /* rank 1, highlights */
+  --gold-soft: #fdf1d6;
+  --gold-foreground: #5a3a00;
+  --live: #b42318;
+  --live-soft: #fdecea;
+  --destructive: #c62f29;
+  --destructive-foreground: #ffffff;
+  --success: #12795a;
+  --warning: #9a5c00;
+  --border: #e1e7f2;
+  --input: #d3dbea;
+  --ring: #0b2a6f;
+  --sidebar: #081638;              /* admin sidebar: deeper navy */
+  --sidebar-active: #1f4fb8;       /* active nav item; white on it 6.6:1 */
 }
 
 @layer base {
@@ -58,7 +83,16 @@
     -webkit-text-size-adjust: 100%;
   }
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Ethiopic", sans-serif;
+    @apply bg-background font-sans text-foreground antialiased;
   }
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight;
+  }
+}
+
+@utility card-shadow {
+  /* One cheap shadow, no blur filters (slow phones). */
+  box-shadow: 0 1px 2px rgb(15 27 61 / 0.04), 0 4px 16px -8px rgb(11 42 111 / 0.12);
 }

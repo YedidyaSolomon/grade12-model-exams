@@ -257,7 +257,7 @@ function Room({ payload }: { payload: TimedPayload }) {
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-center" aria-live="assertive">
         {phase === 'retrying' ? <CloudOff className="size-10 text-warning" aria-hidden /> : <Loader2 className="size-10 animate-spin text-primary" aria-hidden />}
-        <h1 className="text-xl font-semibold">{timeUp ? t('room.timeUpTitle') : t('room.submittingTitle')}</h1>
+        <h1 className="text-xl font-extrabold text-primary">{timeUp ? t('room.timeUpTitle') : t('room.submittingTitle')}</h1>
         <p className="max-w-sm text-muted-foreground">
           {phase === 'retrying' ? t('room.submitRetrying') : timeUp ? t('room.timeUpBody') : t('room.submittingBody')}
         </p>
@@ -272,7 +272,7 @@ function Room({ payload }: { payload: TimedPayload }) {
       {confirmDialog}
 
       {/* Sticky header: title, timer, save status */}
-      <header className="sticky top-0 z-20 border-b bg-card/95 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b bg-card">
         <div className="mx-auto flex max-w-5xl items-center gap-2 px-3 py-2">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{payload.title}</p>

@@ -77,7 +77,7 @@ function Locked({ r }: { r: MyResult }) {
     <section aria-labelledby="result-h" className="space-y-4 rounded-xl border bg-card p-5">
       <div>
         <p className="text-sm text-muted-foreground">{r.subject}</p>
-        <h1 id="result-h" className="text-xl font-semibold">{r.title}</h1>
+        <h1 id="result-h" className="text-xl font-extrabold text-primary">{r.title}</h1>
       </div>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <CheckCircle2 className="size-4 text-success" aria-hidden />
@@ -123,7 +123,7 @@ function Released({ r }: { r: Released }) {
       <section aria-labelledby="result-h" className="space-y-4 rounded-xl border bg-card p-5">
         <div>
           <p className="text-sm text-muted-foreground">{r.subject}</p>
-          <h1 id="result-h" className="text-xl font-semibold">{r.title}</h1>
+          <h1 id="result-h" className="text-xl font-extrabold text-primary">{r.title}</h1>
         </div>
         <div className="grid grid-cols-3 gap-3 text-center">
           <Stat label={t('result.score')} value={`${r.score}/${r.max_score}`} />

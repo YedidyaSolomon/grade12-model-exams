@@ -1,13 +1,14 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter } from 'react-router'
 import { Loading } from '@/components/states'
-import { RedirectIfSignedIn, RequireAdmin, RequireAuth } from '@/auth/guards'
+import { PublicHomeOrApp, RedirectIfSignedIn, RequireAdmin, RequireAuth } from '@/auth/guards'
 import StudentLayout from '@/layouts/StudentLayout'
 import LoginPage from '@/pages/LoginPage'
 import AuthCallbackPage from '@/pages/AuthCallbackPage'
 import DashboardPage from '@/pages/student/DashboardPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
+const HomePage = lazy(() => import('@/pages/HomePage'))
 // Rarely-visited / admin pages are split out so students on mobile data don't download them.
 const CompleteProfilePage = lazy(() => import('@/pages/CompleteProfilePage'))
 const SuspendedPage = lazy(() => import('@/pages/SuspendedPage'))
@@ -33,14 +34,21 @@ export const router = createBrowserRouter([
   },
   { path: '/auth/callback', element: <AuthCallbackPage /> },
   {
+    // Logged out: public landing page. Signed in: the student dashboard.
+    path: '/',
+    element: <PublicHomeOrApp publicPage={s(<HomePage />)} />,
+    children: [
+      {
+        element: <RequireAuth />,
+        children: [{ element: <StudentLayout />, children: [{ index: true, element: <DashboardPage /> }] }],
+      },
+    ],
+  },
+  {
     element: <RequireAuth />,
     children: [
       { path: '/suspended', element: s(<SuspendedPage />) },
       { path: '/complete-profile', element: s(<CompleteProfilePage />) },
-      {
-        element: <StudentLayout />,
-        children: [{ path: '/', element: <DashboardPage /> }],
-      },
       // Exam flow is full-screen (no student header) to maximise space on phones.
       { path: '/exam/:examId', element: s(<RulesPage />) },
       { path: '/exam/:examId/room', element: s(<ExamRoomPage />) },

@@ -30,7 +30,8 @@
     "devHint": "Test users created in the dev project's dashboard",
     "email": "Email",
     "password": "Password",
-    "devSubmit": "Sign in (dev)"
+    "devSubmit": "Sign in (dev)",
+    "backHome": "Back to home"
   },
   "callback": {
     "finishing": "Finishing sign-in…",
@@ -58,16 +59,21 @@
   },
   "dashboard": {
     "greeting": "Hello, {{name}}",
+    "greet": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "hello": "Hello, {{name}}",
+    "helloNoName": "Hello",
+    "statsLabel": "Your results so far",
+    "percentLabel": "{{pct}} percent",
+    "factQuestions": "Questions",
+    "factMinutes": "Minutes",
+    "factPoints": "Points",
     "live": "Live now",
-    "liveEmpty": "No exam is live right now.",
     "adminLiveEmpty": "No published exams with an open window. Drafts and exams for another stream don't appear here. Create or publish one in Admin → Exams.",
     "adminGoToExams": "Go to Admin → Exams",
-    "upcoming": "Upcoming",
-    "upcomingEmpty": "No upcoming exams yet. Check back soon.",
-    "completed": "Completed",
-    "completedEmpty": "You haven't completed any exams yet.",
-    "meta_one": "{{count}} question · {{minutes}} min",
-    "meta_other": "{{count}} questions · {{minutes}} min",
     "closesIn": "Closes in {{time}}",
     "yourTimeLeft": "Your time left: {{time}}",
     "start": "Start exam",
@@ -78,7 +84,48 @@
     "resultsAfter": "Results after {{time}}",
     "rank": "Rank #{{rank}} of {{total}}",
     "viewResult": "View result",
-    "leaderboard": "Leaderboard"
+    "leaderboard": "Leaderboard",
+    "liveNow": "Live now",
+    "clockNoteTitle": "Before you start",
+    "clockNote": "Once you start, the clock keeps running. You cannot pause it. Start early: the exam closes at the time shown, even if your time is not finished.",
+    "missedTitle": "Missed an exam?",
+    "missedBody": "If something stopped you from taking an exam, like a power cut or illness, you can ask for a re-exam. Find the exam below and tap “Request a re-exam”.",
+    "chips": {
+      "live_one": "{{count}} exam live",
+      "live_other": "{{count}} exams live",
+      "completed_one": "{{count}} exam done",
+      "completed_other": "{{count}} exams done",
+      "pending_one": "{{count}} re-exam request waiting",
+      "pending_other": "{{count}} re-exam requests waiting",
+      "best": "Best score {{pct}}%"
+    },
+    "exams": {
+      "title": "Your exams",
+      "subtitle": "Upcoming, finished and missed exams.",
+      "search": "Search exams",
+      "tabs": {
+        "all": "All",
+        "missed": "Closed / missed",
+        "scheduled": "Scheduled"
+      },
+      "noMatch": "No exams match “{{q}}”.",
+      "emptyAll": "No exams yet. Check back soon.",
+      "empty": {
+        "all": "No other exams.",
+        "missed": "You haven't missed any exams.",
+        "scheduled": "No exams are scheduled yet."
+      }
+    },
+    "tag": {
+      "scheduled": "Scheduled",
+      "missed": "Missed",
+      "submitted": "Submitted",
+      "results": "Results out"
+    },
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "questions_one": "{{count}} question",
+    "questions_other": "{{count}} questions"
   },
   "result": {
     "score": "Score",
@@ -137,13 +184,35 @@
   "reexamRequest": {
     "action": "Request a re-exam",
     "sending": "Sending…",
-    "title": "Request a re-exam: {{title}}",
-    "body": "Explain why you missed the exam. An admin will review your request; you can see the answer here.",
+    "body": "Choose the exam and the reason, then tell us what happened. An admin will read your request.",
     "reason": "Reason",
     "placeholder": "e.g. I was in hospital on the exam day.",
     "send": "Send request",
     "adminNote": "Admin's note",
-    "approvedHint": "The re-exam has different question and answer order and its own leaderboard."
+    "approvedHint": "The re-exam has different question and answer order and its own leaderboard.",
+    "pill": "Re-exam request",
+    "formTitle": "Ask for a re-exam",
+    "exam": "Exam",
+    "category": "Reason",
+    "categoryPlaceholder": "Choose a reason",
+    "categories": {
+      "network_power": "Network or power outage",
+      "illness": "Illness",
+      "device": "Device problem",
+      "other": "Other"
+    },
+    "details": "What happened?",
+    "count": "{{count}}/{{max}}",
+    "sent": "Request sent. An admin will read it. You can see the answer in “Your re-exam requests” below.",
+    "close": "Close",
+    "list": {
+      "title": "Your re-exam requests",
+      "subtitle": "Your requests and the admin's answers.",
+      "exam": "Exam",
+      "reason": "Reason",
+      "status": "Status",
+      "sentAt": "Sent {{time}}"
+    }
   },
   "rules": {
     "notAvailable": "This exam isn't available to you.",
@@ -241,9 +310,19 @@
     "exams": "Exams",
     "students": "Students",
     "requests": "Re-exam requests",
-    "studentView": "Student view"
+    "studentView": "Student view",
+    "console": "Admin console",
+    "nav": {
+      "manage": "Manage",
+      "records": "Records"
+    },
+    "pendingBadge_one": "{{count}} pending request",
+    "pendingBadge_other": "{{count}} pending requests"
   },
   "overview": {
+    "welcome": "Welcome back, {{name}}",
+    "welcomeNoName": "Welcome back",
+    "tagline": "Here's how your model exams are doing today.",
     "students": "Students",
     "incomplete_one": "{{count}} without a complete profile",
     "incomplete_other": "{{count}} without a complete profile",
@@ -538,12 +617,80 @@
       "duration": "Duration (minutes)",
       "windowStart": "Window opens",
       "windowEnd": "Window closes",
-      "windowHint": "Times are East Africa Time (EAT, UTC+3). Students can start any time inside the window; late starters get less time."
+      "windowHint": "Times are East Africa Time (EAT, UTC+3). Students can start any time inside the window; late starters get less time.",
+      "minutesSuffix": "minutes"
     },
     "tabs": {
-      "manual": "Manual entry",
-      "upload": "Upload file",
-      "uploadSoon": "Excel, Word and PDF upload arrives in Phase 6. Uploaded questions will appear in the same preview table."
+      "upload": "Import file",
+      "manual": "Manual editor"
+    },
+    "upload": {
+      "title": "Import questions from a file",
+      "hint": "Excel, CSV or Word (.docx) up to {{mb}} MB, or a typed PDF up to {{pdfMb}} MB. Drag the file here or choose it.",
+      "columns": "Columns: # · Question · A · B · C · D · Answer (A–D) · Points (optional, default 1).",
+      "choose": "Choose file",
+      "reading": "Reading…",
+      "template": "Excel template (CSV)",
+      "found_one": "Found {{count}} question in {{file}}",
+      "found_other": "Found {{count}} questions in {{file}}",
+      "moreWarnings_one": "…and {{count}} more",
+      "moreWarnings_other": "…and {{count}} more",
+      "reviewHint": "Nothing is saved yet. The questions go into the list below, where anything that needs fixing is flagged.",
+      "add": "Add to exam",
+      "append_one": "Add after the {{count}} existing question",
+      "append_other": "Add after the {{count}} existing questions",
+      "replace": "Replace existing questions",
+      "confirmReplaceTitle": "Replace the existing questions?",
+      "confirmReplaceBody_one": "The {{count}} question already in this exam will be removed and replaced by the questions from {{file}}. Nothing is saved until you save the exam.",
+      "confirmReplaceBody_other": "The {{count}} questions already in this exam will be removed and replaced by the questions from {{file}}. Nothing is saved until you save the exam.",
+      "imported_one": "Imported {{count}} question from {{file}}. Check the list, then save.",
+      "imported_other": "Imported {{count}} questions from {{file}}. Check the list, then save.",
+      "errors": {
+        "type": "Choose an Excel (.xlsx), CSV, Word (.docx) or PDF file.",
+        "tooBig": "That file is larger than {{mb}} MB.",
+        "empty": "The file has no questions in it.",
+        "tooManyRows": "The file has more than {{max}} rows. Split it into smaller files.",
+        "unreadable": "Couldn't read that file. Make sure it isn't damaged and is a normal Excel, CSV, Word or PDF file.",
+        "oldXls": "Old Excel files (.xls) can't be read. In Excel, use File → Save As → Excel Workbook (.xlsx), then import that.",
+        "oldDoc": "Old Word files (.doc) can't be read. In Word, use File → Save As → Word Document (.docx), then import that.",
+        "noQuestionsFound": "No numbered questions found. Number each question (1., 2., …), write the options as A. to D., and add \"Answer: B\". The Word template shows the format.",
+        "tooManyQuestions": "The file has more than {{max}} questions. Split it into smaller files.",
+        "scanned": "This PDF looks scanned (an image). Please upload a typed PDF or Word file.",
+        "pdfPassword": "This PDF is password-protected. Save a copy without a password and try again."
+      },
+      "warnings": {
+        "noHeader": "No header row found, so columns were read in order: # · Question · A · B · C · D · Answer · Points.",
+        "badAnswer": "Row {{row}}: answer \"{{value}}\" isn't A, B, C or D. Set it in the list below.",
+        "badPoints": "Row {{row}}: points \"{{value}}\" must be a whole number from 1 to 100.",
+        "badAnswerQ": "Question {{number}}: answer \"{{value}}\" isn't A, B, C or D. Set it in the list below.",
+        "keyConflict": "Question {{number}}: the Answer line says {{line}} but the answer key says {{key}}. {{line}} was kept; check it.",
+        "keyUnknown": "The answer key has answers for questions that aren't in the file: {{numbers}}.",
+        "optionOrder": "Question {{number}}: the options aren't in A, B, C, D order. Check them.",
+        "imagesSkipped_one": "Question {{numbers}} has a picture in the file. Add it with Edit after importing.",
+        "imagesSkipped_other": "Questions {{numbers}} have pictures in the file. Add them with Edit after importing.",
+        "equationsSkipped_one": "The file has {{count}} equation that was not imported. Find the question with a gap and retype it.",
+        "equationsSkipped_other": "The file has {{count}} equations that were not imported. Find the questions with gaps and retype them.",
+        "scannedPages_one": "Page {{pages}} has almost no text (it may be a scanned picture). Its questions may be missing.",
+        "scannedPages_other": "Pages {{pages}} have almost no text (they may be scanned pictures). Their questions may be missing.",
+        "twoColumns_one": "Page {{pages}} looks like it has two columns. Questions from both columns can get mixed up: check them, or import the Word file instead.",
+        "twoColumns_other": "Pages {{pages}} look like they have two columns. Questions from both columns can get mixed up: check them, or import the Word file instead."
+      },
+      "wordTemplate": "Word template",
+      "excelHeading": "Excel / CSV",
+      "wordHeading": "Word / PDF",
+      "wordExample": "1. Question text\nA. option\nB. option\nC. option\nD. option\nAnswer: B",
+      "wordKeyHint": "Options can also be on one line (A. … B. … C. … D. …), and \"A)\", \"(A)\" or \"a.\" work too. Instead of Answer lines you can end with an answer key: \"Answer key: 1-B, 2-C, 3-A\".",
+      "pdfHint": "PDF: typed PDFs only, not scans. Pages with two columns may come out in the wrong order.",
+      "noImages": "Pictures and equations are not imported. Add pictures to each question after importing.",
+      "noImagesAfter": "Pictures and equations in the file were not imported. Use Edit on a question to add its picture, and retype any equation.",
+      "needFix_one": "{{count}} needs fixing. It's marked in the list after you add the questions.",
+      "needFix_other": "{{count}} need fixing. They're marked in the list after you add the questions.",
+      "numberingOnly": "The numbering needs fixing (see below).",
+      "allComplete": "Every question has text, 4 options and an answer.",
+      "savingOriginal": "Saving the original file…",
+      "sourceSaveFailed": "The questions were added, but the original file couldn't be saved ({{message}}). Import it again later to keep a copy.",
+      "originalFile": "Original file:",
+      "downloadOriginal": "Download"
     },
     "form": {
       "addTitle": "Add question {{number}}",
@@ -578,7 +725,8 @@
     "locked": {
       "title_one": "{{count}} student has already started this exam",
       "title_other": "{{count}} students have already started this exam",
-      "body": "Questions, options and timing are locked. You can still correct answer keys; submitted attempts are re-graded automatically."
+      "body": "Questions, options and timing are locked. You can still correct answer keys; submitted attempts are re-graded automatically.",
+      "bar": "Only the answer key can be changed."
     },
     "actions": {
       "create": "Create exam",
@@ -613,6 +761,33 @@
       "unpublishBody": "Students will no longer see it until you publish again.",
       "keysTitle": "Change answer keys?",
       "keysBody": "{{count}} answer key(s) will change and all {{attempts}} submitted attempt(s) will be re-graded."
+    },
+    "editorSubtitle": "Set the details and the time window, then add the questions.",
+    "section1": {
+      "title": "Exam details & timings",
+      "subtitle": "Name, stream, length and when students can start."
+    },
+    "section2": {
+      "title": "Questions & scoring",
+      "subtitle": "Import questions from Excel or write them one by one."
+    },
+    "required": "Required",
+    "questionCount_one": "{{count}} question",
+    "questionCount_other": "{{count}} questions",
+    "pointsTotal_one": "{{count}} point total",
+    "pointsTotal_other": "{{count}} points total",
+    "previewHeading": "Question paper preview ({{count}})",
+    "addManually": "Add a question by hand",
+    "streamShort": {
+      "both": "Both",
+      "natural": "Natural",
+      "social": "Social"
+    },
+    "server": {
+      "label": "Server time",
+      "body": "Exam windows, timers and automatic submission use the server clock, not this computer's clock.",
+      "inSync": "Clock in sync",
+      "off": "Clock off by {{time}}"
     }
   },
   "problems": {
@@ -637,5 +812,86 @@
   "notFound": {
     "title": "Page not found",
     "home": "Go home"
+  },
+  "home": {
+    "signInShort": "Sign in",
+    "nav": {
+      "how": "How it works",
+      "results": "Top students"
+    },
+    "pill": "Grade 12 model exams",
+    "title": "Practice for the national exam with timed model exams",
+    "lead": "Take model exams on your phone, with a time limit like on exam day. When the exam closes, you see your score, the correct answers and your rank.",
+    "features": {
+      "timed": {
+        "title": "Timed like exam day",
+        "body": "The time is checked on our server, not on your phone."
+      },
+      "telegram": {
+        "title": "Sign in with Telegram",
+        "body": "One tap. No password to remember."
+      },
+      "results": {
+        "title": "Score and rank",
+        "body": "You see them when the exam closes for everyone."
+      },
+      "phone": {
+        "title": "Works on slow data",
+        "body": "Small pages that load on any phone."
+      }
+    },
+    "signIn": {
+      "title": "Start practicing",
+      "body": "Use your Telegram account to sign in."
+    },
+    "stats": {
+      "students": "Students",
+      "examsHeld": "Exams held"
+    },
+    "streamBoth": "All streams",
+    "live": {
+      "heading": "Exam open now",
+      "cta": "Sign in to start"
+    },
+    "next": {
+      "heading": "Next exam",
+      "title": "Next exam: {{title}}",
+      "meta_one": "{{subject}} · {{stream}} · {{time}} · {{minutes}} min · {{count}} question",
+      "meta_other": "{{subject}} · {{stream}} · {{time}} · {{minutes}} min · {{count}} questions"
+    },
+    "podium": {
+      "pill": "Latest results",
+      "title": "Top students",
+      "exam": "Exam:",
+      "first": "First place",
+      "student": "Student",
+      "score": "Score",
+      "privacy": "To keep students safe, we show only the first name and one letter of the last name. Sign in to see the full leaderboard.",
+      "full": "See the full leaderboard"
+    },
+    "how": {
+      "pill": "How it works",
+      "title": "Four simple steps",
+      "signIn": {
+        "title": "Sign in with Telegram",
+        "body": "Tap the button and confirm in Telegram. Then add your name, school and stream."
+      },
+      "wait": {
+        "title": "Wait for the exam to open",
+        "body": "Each exam opens at a set time. Your page shows when it starts."
+      },
+      "take": {
+        "title": "Take the timed exam",
+        "body": "Answer on your phone. Your answers are saved as you go. When time is up, they are sent for you."
+      },
+      "results": {
+        "title": "See your score and rank",
+        "body": "When the exam closes for everyone, you see your score, the correct answers and your rank."
+      }
+    },
+    "cta": {
+      "title": "Ready for exam day?",
+      "body": "Sign in and take your next model exam."
+    }
   }
 }

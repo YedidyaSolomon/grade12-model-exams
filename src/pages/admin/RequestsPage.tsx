@@ -54,7 +54,7 @@ export default function RequestsPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-4">
       {promptDialog}
-      <h1 className="text-2xl font-semibold">{t('requests.title')}</h1>
+      <h1 className="text-2xl font-extrabold text-primary">{t('requests.title')}</h1>
       <div role="group" aria-label={t('requests.filterLabel')} className="flex flex-wrap gap-1">
         {FILTERS.map((f) => (
           <Button key={f} size="sm" variant={filter === f ? 'default' : 'outline'} aria-pressed={filter === f} onClick={() => setFilter(f)}>
@@ -100,6 +100,11 @@ export default function RequestsPage() {
                   {r.exam_title}
                 </Link>
                 <span className="text-muted-foreground"> · {r.exam_subject}</span>
+              </p>
+              <p>
+                <span className="rounded-md bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary">
+                  {t(`reexamRequest.categories.${r.reason_category}`)}
+                </span>
               </p>
               <blockquote className="border-l-2 pl-3 text-muted-foreground">{r.reason}</blockquote>
               {r.status !== 'pending' && (

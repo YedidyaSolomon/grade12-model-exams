@@ -14,9 +14,12 @@
     "db:test": "supabase test db --remote",
     "db:test:remote": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-test-remote.ps1",
     "fn:deploy": "supabase functions deploy --use-api",
-    "db:types": "supabase gen types --lang typescript --schema public --remote > src/lib/database.types.ts"
+    "db:types": "supabase gen types --lang typescript --schema public --remote > src/lib/database.types.ts",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@fontsource-variable/noto-sans-ethiopic": "^5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
     "@radix-ui/react-label": "^2.1.17",
     "@radix-ui/react-slot": "^1.5.0",
     "@supabase/supabase-js": "^2.119.0",
@@ -25,10 +28,13 @@
     "clsx": "^2.1.1",
     "i18next": "^27.0.1",
     "lucide-react": "^1.70.0",
+    "mammoth": "^1.13.0",
+    "pdfjs-dist": "^6.5.438",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-i18next": "^18.0.0",
     "react-router": "^8.5.1",
+    "read-excel-file": "^5.8.8",
     "tailwind-merge": "^3.7.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
@@ -41,6 +47,7 @@
     "supabase": "^3.0.0",
     "tailwindcss": "^4.3.5",
     "typescript": "^7.0.2",
-    "vite": "^8.3.6"
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
   }
 }

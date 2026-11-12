@@ -447,6 +447,7 @@ export type Database = {
           exam_id: string
           id: string
           reason: string
+          reason_category: Database["public"]["Enums"]["reexam_reason"]
           reexam_id: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -459,6 +460,7 @@ export type Database = {
           exam_id: string
           id?: string
           reason: string
+          reason_category?: Database["public"]["Enums"]["reexam_reason"]
           reexam_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -471,6 +473,7 @@ export type Database = {
           exam_id?: string
           id?: string
           reason?: string
+          reason_category?: Database["public"]["Enums"]["reexam_reason"]
           reexam_id?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -824,9 +827,14 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_banned_user: { Args: never; Returns: boolean }
       is_valid_options: { Args: { o: Json }; Returns: boolean }
+      public_home: { Args: never; Returns: Json }
       regrade_exam: { Args: { p_exam_id: string }; Returns: number }
       request_reexam: {
-        Args: { p_exam_id: string; p_reason: string }
+        Args: {
+          p_category?: Database["public"]["Enums"]["reexam_reason"]
+          p_exam_id: string
+          p_reason: string
+        }
         Returns: Json
       }
       save_answer: {
@@ -862,6 +870,7 @@ export type Database = {
       answer_option: "A" | "B" | "C" | "D"
       exam_state: "draft" | "scheduled" | "live" | "closed"
       exam_stream: "natural" | "social" | "both"
+      reexam_reason: "network_power" | "illness" | "device" | "other"
       reexam_status: "pending" | "approved" | "rejected"
       stream_type: "natural" | "social"
       user_role: "student" | "admin"
@@ -995,6 +1004,7 @@ export const Constants = {
       answer_option: ["A", "B", "C", "D"],
       exam_state: ["draft", "scheduled", "live", "closed"],
       exam_stream: ["natural", "social", "both"],
+      reexam_reason: ["network_power", "illness", "device", "other"],
       reexam_status: ["pending", "approved", "rejected"],
       stream_type: ["natural", "social"],
       user_role: ["student", "admin"],

@@ -6,6 +6,7 @@ import {
   type AttemptPayload,
   type Dashboard,
   type OptionLetter,
+  type ReexamReason,
   type StudentErrorCode,
   type SubmitResult,
 } from './types'
@@ -15,6 +16,7 @@ export const payloadKey = (examId: string) => `exam-payload:${examId}`
 
 export const roomKeys = {
   dashboard: ['student', 'dashboard'] as const,
+  reexamRequests: ['student', 'reexam-requests'] as const,
   attempt: (examId: string) => ['student', 'attempt', examId] as const,
 }
 
@@ -22,13 +24,40 @@ export const roomKeys = {
 export function useRequestReexam() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (v: { examId: string; reason: string }) => {
-      const { error } = await supabase.rpc('request_reexam', { p_exam_id: v.examId, p_reason: v.reason })
+    mutationFn: async (v: { examId: string; reason: string; category: ReexamReason }) => {
+      const { error } = await supabase.rpc('request_reexam', {
+        p_exam_id: v.examId,
+        p_reason: v.reason,
+        p_category: v.category,
+      })
       if (error) throw error
     },
-    onSettled: () => void qc.invalidateQueries({ queryKey: roomKeys.dashboard }),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: roomKeys.dashboard })
+      void qc.invalidateQueries({ queryKey: roomKeys.reexamRequests })
+    },
   })
 }
+
+/** The student's own re-exam requests (RLS: own rows only), newest first. */
+export function useMyReexamRequests() {
+  return useQuery({
+    queryKey: roomKeys.reexamRequests,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('reexam_requests')
+        .select(
+          'id, reason, reason_category, status, admin_note, created_at, reviewed_at, exam:exams!reexam_requests_exam_id_fkey(title, subject)',
+        )
+        .order('created_at', { ascending: false })
+        .limit(50)
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export type MyReexamRequest = NonNullable<ReturnType<typeof useMyReexamRequests>['data']>[number]
 
 /** 'already_taken' etc. for errors raised by the exam RPCs; null for anything else. */
 export function studentErrorCode(e: unknown): StudentErrorCode | null {
